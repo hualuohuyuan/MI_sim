@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------
+# MI_sim ignore rules
+# 本仓库是纯静态 HTML，没有构建步骤、没有依赖。
+# This repo is plain static HTML — no build step, no dependencies.
+# 所以这里忽略的都是"本地产物"，不是项目代码。
+# Everything ignored below is local noise, never project source.
+# ---------------------------------------------------------------
+
+# 操作系统垃圾文件 / OS junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# 编辑器与 IDE / Editors & IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+
+# Kiro 本地配置（steering / skills / hooks 属于个人工作流，不随仓库分发）
+# Kiro local config — personal workflow, intentionally not shipped
+.kiro/
+
+# 自动化验证产物：截图与临时预览页，均以下划线开头
+# Verification artifacts: screenshots and scratch preview pages (underscore-prefixed)
+_*.html
+_*.png
+_*.txt
+*.tmp
+
+# 仿真数据导出（如果以后加了 CSV / NPZ 导出功能）
+# Simulation data exports (in case export is added later)
+*.csv
+*.npz
+*.h5
+data/
+out/
+
+# 日志 / Logs
+*.log
+logs/
+
+# 归档文件 / Archives
+*.zip
+*.tar
+*.tar.gz
+*.7z

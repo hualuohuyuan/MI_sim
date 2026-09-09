@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>M1 · 局部信息网络宇宙实验台</title>
+<style>
+  :root{
+    --bg0:#060912; --bg1:#0b1120; --panel:rgba(17,25,44,.78); --line:rgba(118,148,214,.16);
+    --text:#e9eefb; --muted:#8fa3cd; --accent:#5fd0ff; --accent2:#b98cff;
+    --ok:#4be3a6; --warn:#ffb454; --bad:#ff6b8a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif}
+  body{background:
+    radial-gradient(1100px 760px at 76% -12%, #16223f 0%, transparent 56%),
+    radial-gradient(880px 660px at -6% 108%, #1b1033 0%, transparent 52%),
+    linear-gradient(158deg,var(--bg0),var(--bg1))}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+  header.bar{display:flex;align-items:center;gap:16px;padding:11px 18px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(8,13,26,.94),rgba(8,13,26,.4));
+    border-bottom:1px solid var(--line);backdrop-filter:blur(9px);z-index:6}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .dot{width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#c8fbff,#5fd0ff 45%,#2a6bff 100%);
+    box-shadow:0 0 14px #5fd0ff,0 0 32px rgba(95,208,255,.45)}
+  .brand h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+  .brand h1 small{display:block;font-size:10.5px;font-weight:400;color:var(--muted);letter-spacing:1.6px}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{padding:7px 13px;border-radius:9px;border:1px solid var(--line);cursor:pointer;font-size:12.5px;
+    background:rgba(255,255,255,.03);color:var(--muted);transition:.16s;white-space:nowrap}
+  .tab:hover{color:#fff;border-color:var(--accent)}
+  .tab.on{background:linear-gradient(120deg,#2a6bff,#7a4bff);color:#fff;border-color:transparent;font-weight:600}
+
+  .runbar{display:flex;align-items:center;gap:7px;margin-left:auto;flex-wrap:wrap}
+  button.btn{padding:8px 13px;border-radius:9px;border:1px solid var(--line);cursor:pointer;
+    background:rgba(255,255,255,.04);color:var(--text);font-size:12.5px;transition:.16s;white-space:nowrap;font-family:inherit}
+  button.btn:hover{border-color:var(--accent);background:rgba(95,208,255,.1);color:#fff}
+  button.btn.go{background:linear-gradient(120deg,#1f8f5f,#2fd08a);border:none;font-weight:600;color:#04120c}
+  button.btn.pause{background:linear-gradient(120deg,#b8552f,#ffa14b);border:none;font-weight:600;color:#180a02}
+  .stepcnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .stepcnt b{color:#fff;font-size:14px}
+  a.langlink{font-size:11.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);
+    border-radius:8px;padding:6px 10px;transition:.16s}
+  a.langlink:hover{background:rgba(95,208,255,.1);border-color:var(--accent)}
+
+  .body{flex:1;min-height:0;display:flex}
+  aside{width:274px;flex-shrink:0;overflow-y:auto;padding:13px;border-right:1px solid var(--line);
+    background:rgba(9,14,28,.5)}
+  aside::-webkit-scrollbar{width:7px} aside::-webkit-scrollbar-thumb{background:rgba(120,150,210,.25);border-radius:4px}
+  .grp{margin-bottom:14px}
+  .grp h3{margin:0 0 7px;font-size:11px;color:var(--accent);letter-spacing:1.1px;text-transform:uppercase;font-weight:700}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:12px;color:var(--muted)}
+  .row select,.row input[type=text]{width:118px;padding:5px 7px;border-radius:7px;border:1px solid var(--line);
+    background:rgba(5,9,20,.75);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+  .row select:focus,.row input:focus{border-color:var(--accent)}
+  .row input[type=range]{width:112px;accent-color:var(--accent)}
+  .row .val{min-width:44px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums;font-size:11.5px}
+  .note{font-size:11px;color:var(--muted);line-height:1.6;background:rgba(95,208,255,.06);
+    border:1px solid rgba(95,208,255,.18);border-radius:8px;padding:8px 9px;margin-top:4px}
+  .note b{color:var(--text)}
+  .axiom{font-size:11px;color:var(--muted);line-height:1.65}
+  .axiom code{color:var(--accent2);background:rgba(185,140,255,.1);padding:1px 4px;border-radius:4px;font-size:10.5px}
+
+  main{flex:1;min-width:0;display:flex;flex-direction:column;padding:13px;gap:11px;overflow:hidden}
+  .stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:11px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px;
+    display:flex;flex-direction:column;min-width:0;min-height:0;backdrop-filter:blur(7px)}
+  .card .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-shrink:0}
+  .card .hd h2{margin:0;font-size:12.5px;font-weight:600}
+  .card .hd .sub{font-size:10.5px;color:var(--muted)}
+  .cv{flex:1;min-height:0;position:relative}
+  .cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .readout{flex-shrink:0;max-height:48%;overflow-y:auto;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;padding:11px 13px;backdrop-filter:blur(7px)}
+  .readout::-webkit-scrollbar{width:7px}
+  .readout::-webkit-scrollbar-thumb{background:rgba(120,150,210,.25);border-radius:4px}
+  .rowmetrics{display:flex;gap:15px;flex-wrap:wrap;align-items:flex-start}
+  .met{font-size:10.5px;color:var(--muted);line-height:1.35;min-width:96px}
+  .met b{display:block;font-size:18px;color:#fff;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .met b.ok{color:var(--ok)} .met b.warn{color:var(--warn)} .met b.bad{color:var(--bad)}
+  .met s{display:block;text-decoration:none;color:rgba(143,163,205,.7);font-size:10px}
+  /* 当前读数：只陈述事实，不做判定，所以用中性色 */
+  .verdict{margin-top:10px;font-size:12px;line-height:1.7;border-left:3px solid rgba(120,150,214,.5);
+    background:rgba(120,150,214,.07);border-radius:0 7px 7px 0;padding:8px 11px;color:#cfe0fa}
+  .verdict b{color:#fff}
+  .verdict code{color:var(--accent);font-size:11.5px}
+
+  /* 指标来源标签 */
+  .met .src{display:inline-block;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:5px;
+    vertical-align:2px;letter-spacing:.3px;font-weight:600}
+  .met .src.ana{background:rgba(185,140,255,.15);color:#c6a4ff;border:1px solid rgba(185,140,255,.32)}
+  .met .src.obs{background:rgba(95,208,255,.13);color:#7fdcff;border:1px solid rgba(95,208,255,.32)}
+  .met i{display:block;font-style:normal;font-size:10px;color:rgba(143,163,205,.85);margin-top:1px}
+
+  /* 情况清单：让你自己对照曲线判断 */
+  .cases{margin-top:11px;border-top:1px solid var(--line);padding-top:10px}
+  .cases .chd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .cases h4{margin:0;font-size:11.5px;color:var(--accent);font-weight:700;letter-spacing:.5px}
+  .cases .lg{font-size:10px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+  .cases .lg span{display:flex;align-items:center;gap:4px}
+  .cases .lg i{width:7px;height:7px;border-radius:2px;display:inline-block}
+  .cases ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 20px}
+  .cases li{font-size:11.5px;line-height:1.62;color:var(--muted);padding-left:15px;position:relative}
+  .cases li::before{content:'';position:absolute;left:0;top:6px;width:7px;height:7px;border-radius:2px}
+  .cases li.a::before{background:var(--ok)}
+  .cases li.b::before{background:var(--accent)}
+  .cases li.c::before{background:var(--bad)}
+  .cases li.d::before{background:#7f8fb0}
+  .cases li b{color:var(--text);font-weight:600}
+  .cases li u{text-decoration:none;color:#c6a4ff}
+  @media(max-width:1200px){ .cases ul{grid-template-columns:1fr} }
+
+  @media(max-width:1040px){
+    .stage{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+    aside{width:230px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>M1 局部信息网络宇宙<small>NODES · EDGES · LOCAL UPDATE</small></h1>
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab on" data-exp="1">实验 1 · 因果速度</div>
+      <div class="tab" data-exp="2">实验 2 · 光锥</div>
+      <div class="tab" data-exp="3">实验 3 · 粒子</div>
+      <div class="tab" data-exp="4">实验 4 · 连续时空</div>
+    </div>
+    <div class="runbar">
+      <button class="btn go" id="btnRun">▶ 运行</button>
+      <button class="btn" id="btnStep">单步</button>
+      <button class="btn" id="btnReset">重置</button>
+      <div class="stepcnt">更新次数 n = <b id="stepN">0</b></div>
+      <a class="langlink" href="index.html">English</a>
+    </div>
+  </header>
+
+  <div class="body">
+    <aside>
+      <div class="grp">
+        <h3>宇宙的全部公设</h3>
+        <div class="axiom">
+          只给三样东西：节点 <code>V</code>、连接 <code>E</code>、局部更新 <code>F</code>。<br><br>
+          <code>s_i(n+1) = F(s_i, {s_j : j∈N(i)})</code><br><br>
+          <b style="color:var(--bad)">禁止全局读取</b>——任何节点只能看到直接邻居。空间 / 时间 / 光速都不预先给定，只允许被测量出来。
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>网络 G</h3>
+        <div class="row"><span>边长 N</span>
+          <select id="pN"><option>64</option><option selected>128</option><option>192</option><option>256</option></select></div>
+        <div class="row"><span>邻域</span>
+          <select id="pNb"><option value="4" selected>4 邻（上下左右）</option><option value="8">8 邻（含对角）</option></select></div>
+        <div class="row"><span>边界</span>
+          <select id="pBnd"><option value="fixed" selected>固定 (φ=0)</option><option value="torus">周期 (环面)</option></select></div>
+        <div class="row"><span>长程重连</span>
+          <input type="range" id="pRw" min="0" max="400" step="10" value="0"><span class="val" id="vRw">0</span></div>
+        <div class="note">长程边会破坏局部性。加几条就看因果速度和维度会不会崩——这是对「局部性造就光锥」的直接对照实验。</div>
+      </div>
+
+      <div class="grp">
+        <h3>局部更新规则 F</h3>
+        <div class="row"><span>规则</span>
+          <select id="pRule">
+            <option value="wave" selected>离散波动（无质量）</option>
+            <option value="kg">Klein–Gordon（有质量）</option>
+            <option value="sg">sine-Gordon（非线性）</option>
+            <option value="life">生命游戏（s∈{0,1}）</option>
+          </select></div>
+        <div class="row"><span>耦合 κ</span>
+          <input type="range" id="pK" min="0.02" max="0.5" step="0.01" value="0.25"><span class="val" id="vK">0.25</span></div>
+        <div class="row"><span>质量 m</span>
+          <input type="range" id="pM" min="0" max="0.6" step="0.01" value="0"><span class="val" id="vM">0.00</span></div>
+        <div class="note">κ 的稳定上限是 <b>0.5</b>（4 邻）。理论波速 <b>√κ</b>，因果上限恒为 <b>1 边/步</b>——两者不同，实验会同时测。</div>
+      </div>
+
+      <div class="grp">
+        <h3>初始扰动</h3>
+        <div class="row"><span>种子</span>
+          <select id="pSeed">
+            <option value="point" selected>单点脉冲</option>
+            <option value="gauss">高斯波包</option>
+            <option value="breather">sine-Gordon 呼吸子</option>
+            <option value="glider">生命游戏滑翔机</option>
+            <option value="noise">随机噪声</option>
+          </select></div>
+        <div class="row"><span>宽度 σ</span>
+          <input type="range" id="pW" min="0.6" max="12" step="0.2" value="3"><span class="val" id="vW">3.0</span></div>
+        <div class="row"><span>每帧步数</span>
+          <input type="range" id="pSpd" min="1" max="12" step="1" value="2"><span class="val" id="vSpd">2</span></div>
+      </div>
+
+      <div class="grp" id="grpDisp" style="display:none">
+        <h3>色散测量（实验 4）</h3>
+        <button class="btn" id="btnDisp" style="width:100%">测量 ω(k) 全谱</button>
+        <div class="note">在一维链上对每个 k 单独演化并数零点，得到实测色散关系，再和连续极限 ω=√κ·k 比较。</div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="stage">
+        <div class="card">
+          <div class="hd"><h2 id="fieldTitle">场 φ 与因果球</h2><span class="sub" id="fieldSub"></span></div>
+          <div class="cv"><canvas id="field"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="hd"><h2 id="plotTitle">前沿半径 r(n)</h2><span class="sub" id="plotSub"></span></div>
+          <div class="cv"><canvas id="plot"></canvas></div>
+        </div>
+      </div>
+
+      <div class="readout">
+        <div class="rowmetrics" id="metrics"></div>
+        <div class="verdict" id="verdict">按「运行」开始。</div>
+        <div class="cases" id="cases"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   0. 状态与工具
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const fieldCv = $('field'), plotCv = $('plot');
+const fctx = fieldCv.getContext('2d'), pctx = plotCv.getContext('2d');
+let DPR = 1;
+
+const cfg = {
+  N:128, nb:4, bnd:'fixed', rewire:0,
+  rule:'wave', kappa:0.25, mass:0,
+  seed:'point', width:3, speed:2
+};
+let exp = 1;                      // 当前实验
+let N=0, cur=null, prev=null, next=null;   // Float32 场
+let touched=null, tnext=null;     // Uint8 因果支撑集（精确，不受浮点影响）
+let bfs=null;                     // 源点到各节点的图距离
+let ballCount=null;               // |B(n)|
+let dEff=NaN;                     // 有效空间维数
+let extra=[];                     // 长程边 [[a,b],...]
+let src=0, srcX=0, srcY=0;
+let step=0, running=false;
+let hist=null;                    // 测量历史
+let stCanvas=null, stCtx=null, stRow=0, ST_H=96;   // 时空图（高度随 N 定，保证等比例）
+let dispData=null;                // 色散测量结果
+let off=null, offCtx=null;        // 场离屏画布
+
+function resizeCanvases(){
+  DPR = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+  for (const cv of [fieldCv, plotCv]){
+    const w=cv.clientWidth, h=cv.clientHeight;
+    cv.width=Math.max(1,Math.round(w*DPR)); cv.height=Math.max(1,Math.round(h*DPR));
+  }
+  drawAll();
+}
+window.addEventListener('resize', resizeCanvases);
+
+/* ============================================================
+   1. 建网 + 初始化
+   ============================================================ */
+function idx(x,y){ return y*N+x; }
+
+function buildExtraEdges(){
+  extra=[];
+  const n=cfg.rewire|0;
+  for(let k=0;k<n;k++){
+    const a=(Math.random()*N*N)|0, b=(Math.random()*N*N)|0;
+    if(a!==b) extra.push([a,b]);
+  }
+}
+
+// 邻居枚举：回调 (j) —— 只用于 BFS / 因果传播（含长程边）
+const OFF4=[[1,0],[-1,0],[0,1],[0,-1]];
+const OFF8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+let adjExtra=null;   // Map: node -> [nodes]
+
+function buildAdjExtra(){
+  adjExtra=new Map();
+  for(const [a,b] of extra){
+    if(!adjExtra.has(a)) adjExtra.set(a,[]);
+    if(!adjExtra.has(b)) adjExtra.set(b,[]);
+    adjExtra.get(a).push(b); adjExtra.get(b).push(a);
+  }
+}
+
+function forEachNeighbor(i, fn){
+  const x=i%N, y=(i/N)|0;
+  const OFF = cfg.nb===8?OFF8:OFF4;
+  for(const [dx,dy] of OFF){
+    let nx=x+dx, ny=y+dy;
+    if(cfg.bnd==='torus'){ nx=(nx+N)%N; ny=(ny+N)%N; }
+    else if(nx<0||nx>=N||ny<0||ny>=N) continue;
+    fn(ny*N+nx);
+  }
+  const ex=adjExtra.get(i);
+  if(ex) for(const j of ex) fn(j);
+}
+
+// BFS：从源点出发的精确图距离 → 给出 |B(n)| 和有效维数
+function computeBFS(){
+  bfs=new Int32Array(N*N).fill(-1);
+  const q=new Int32Array(N*N); let head=0, tail=0;
+  bfs[src]=0; q[tail++]=src;
+  let maxd=0;
+  while(head<tail){
+    const i=q[head++], d=bfs[i];
+    if(d>maxd) maxd=d;
+    forEachNeighbor(i, j=>{ if(bfs[j]<0){ bfs[j]=d+1; q[tail++]=j; } });
+  }
+  ballCount=new Float64Array(maxd+1);
+  for(let i=0;i<bfs.length;i++) if(bfs[i]>=0) ballCount[bfs[i]]++;
+  for(let d=1;d<=maxd;d++) ballCount[d]+=ballCount[d-1];   // 累积
+  // 有效维数：|B(n)| ~ n^d → 在中段做 log-log 线性拟合
+  const lo=Math.max(2, Math.floor(maxd*0.15)), hi=Math.max(lo+2, Math.floor(maxd*0.55));
+  let sx=0,sy=0,sxx=0,sxy=0,cnt=0;
+  for(let d=lo;d<=hi;d++){
+    if(ballCount[d]<=1) continue;
+    const X=Math.log(d), Y=Math.log(ballCount[d]);
+    sx+=X; sy+=Y; sxx+=X*X; sxy+=X*Y; cnt++;
+  }
+  dEff = cnt>1 ? (cnt*sxy-sx*sy)/(cnt*sxx-sx*sx) : NaN;
+}
+
+function allocate(){
+  N=cfg.N;
+  const n2=N*N;
+  cur=new Float32Array(n2); prev=new Float32Array(n2); next=new Float32Array(n2);
+  touched=new Uint8Array(n2); tnext=new Uint8Array(n2);
+  srcX=N>>1; srcY=N>>1; src=idx(srcX,srcY);
+  off=document.createElement('canvas'); off.width=N; off.height=N;
+  offCtx=off.getContext('2d');
+  // 高度取 0.72N：因果锥在 n=N/2 抵达边界，这样锥形正好填满且横纵可等比例显示
+  ST_H=Math.max(48, Math.round(N*0.72));
+  stCanvas=document.createElement('canvas'); stCanvas.width=N; stCanvas.height=ST_H;
+  stCtx=stCanvas.getContext('2d');
+  stCtx.fillStyle='#05080f'; stCtx.fillRect(0,0,N,ST_H); stRow=0;
+}
+
+function applySeed(){
+  cur.fill(0); prev.fill(0); next.fill(0); touched.fill(0);
+  const s=cfg.seed, w=cfg.width;
+  if(s==='point'){
+    cur[src]=1; prev[src]=1;            // 静止起始
+    touched[src]=1;
+  } else if(s==='gauss'){
+    const r=Math.ceil(w*3.2);
+    for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+      const x=srcX+dx, y=srcY+dy; if(x<0||x>=N||y<0||y>=N) continue;
+      const v=Math.exp(-(dx*dx+dy*dy)/(2*w*w));
+      if(v>1e-6){ const i=idx(x,y); cur[i]=v; prev[i]=v; touched[i]=1; }
+    }
+  } else if(s==='breather'){
+    // 局部化驼峰 + 初速度 → 非线性项可维持成呼吸子
+    const r=Math.ceil(w*3.2), amp=2.4;
+    for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+      const x=srcX+dx, y=srcY+dy; if(x<0||x>=N||y<0||y>=N) continue;
+      const v=amp*Math.exp(-(dx*dx+dy*dy)/(2*w*w));
+      if(Math.abs(v)>1e-6){ const i=idx(x,y); cur[i]=v; prev[i]=v*0.92; touched[i]=1; }
+    }
+  } else if(s==='glider'){
+    const cells=[[0,1],[1,2],[2,0],[2,1],[2,2]];
+    for(const [dy,dx] of cells){ const i=idx(srcX+dx-1, srcY+dy-1); cur[i]=1; touched[i]=1; }
+  } else if(s==='noise'){
+    const r=Math.ceil(w*3.2);
+    for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+      const x=srcX+dx, y=srcY+dy; if(x<0||x>=N||y<0||y>=N) continue;
+      const i=idx(x,y); cur[i]=(Math.random()*2-1); prev[i]=cur[i]; touched[i]=1;
+    }
+  }
+  if(cfg.rule==='life'){ for(let i=0;i<cur.length;i++) cur[i]=cur[i]>0.5?1:0; }
+}
+
+function reset(){
+  running=false; updateRunBtn();
+  step=0;
+  buildExtraEdges(); buildAdjExtra();
+  allocate();
+  computeBFS();
+  applySeed();
+  hist={n:[],rC:[],rW:[],aniso:[],pv:[],pw:[],mass:[],cent:[]};
+  measure();
+  drawAll();
+  updateReadout();
+}
+
+/* ============================================================
+   2. 局部更新（唯一允许的动力学）
+   ============================================================ */
+function stepField(){
+  const K=cfg.kappa, m=cfg.mass, m2=m*m, rule=cfg.rule;
+  const torus=(cfg.bnd==='torus'), nb8=(cfg.nb===8);
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const i=y*N+x, c=cur[i];
+      let L=0;
+      // ——只读邻居，绝不读全局——
+      const OFF = nb8?OFF8:OFF4;
+      for(let k=0;k<OFF.length;k++){
+        let nx=x+OFF[k][0], ny=y+OFF[k][1];
+        if(torus){ nx=(nx+N)%N; ny=(ny+N)%N; }
+        else if(nx<0||nx>=N||ny<0||ny>=N){ L+=(0-c); continue; }
+        L += cur[ny*N+nx]-c;
+      }
+      let v = 2*c - prev[i] + K*L;
+      if(rule==='kg') v -= m2*c;
+      else if(rule==='sg') v -= m2*Math.sin(c);
+      next[i]=v;
+    }
+  }
+  for(const [a,b] of extra){ next[a]+=K*(cur[b]-cur[a]); next[b]+=K*(cur[a]-cur[b]); }
+  const t=prev; prev=cur; cur=next; next=t;
+}
+
+function stepLife(){
+  const torus=(cfg.bnd==='torus');
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      let cnt=0;
+      for(let k=0;k<OFF8.length;k++){
+        let nx=x+OFF8[k][0], ny=y+OFF8[k][1];
+        if(torus){ nx=(nx+N)%N; ny=(ny+N)%N; }
+        else if(nx<0||nx>=N||ny<0||ny>=N) continue;
+        if(cur[ny*N+nx]>0.5) cnt++;
+      }
+      const a=cur[y*N+x]>0.5;
+      next[y*N+x] = (a ? (cnt===2||cnt===3) : (cnt===3)) ? 1 : 0;
+    }
+  }
+  const t=prev; prev=cur; cur=next; next=t;
+}
+
+// 因果支撑集：严格按「每步最多传一条边」扩张
+function stepTouched(){
+  tnext.set(touched);
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const i=y*N+x; if(touched[i]) continue;
+      let hit=false;
+      const OFF = cfg.nb===8?OFF8:OFF4;
+      for(let k=0;k<OFF.length && !hit;k++){
+        let nx=x+OFF[k][0], ny=y+OFF[k][1];
+        if(cfg.bnd==='torus'){ nx=(nx+N)%N; ny=(ny+N)%N; }
+        else if(nx<0||nx>=N||ny<0||ny>=N) continue;
+        if(touched[ny*N+nx]) hit=true;
+      }
+      if(hit) tnext[i]=1;
+    }
+  }
+  for(const [a,b] of extra){ if(touched[a]) tnext[b]=1; if(touched[b]) tnext[a]=1; }
+  const t=touched; touched=tnext; tnext=t;
+}
+
+function doStep(){
+  if(cfg.rule==='life') stepLife(); else stepField();
+  stepTouched();
+  step++;
+  measure();
+  if(exp===2) pushSpacetimeRow();
+}
+
+/* ============================================================
+   3. 测量（这才是实验的核心）
+   ============================================================ */
+const NANG=36;
+let lastMax=1;
+
+function measure(){
+  // (a) 因果前沿半径：touched 集合里的最大图距离
+  let rC=0, nTouched=0;
+  for(let i=0;i<touched.length;i++) if(touched[i]){ nTouched++; if(bfs[i]>rC) rC=bfs[i]; }
+
+  // (b) 幅度前沿：|φ| 超过阈值的最远欧氏距离 + 各方向半径（测各向异性）
+  let mx=0;
+  for(let i=0;i<cur.length;i++){ const a=Math.abs(cur[i]); if(a>mx) mx=a; }
+  lastMax=Math.max(mx,1e-12);
+  const thr=Math.max(1e-5, mx*1e-3);
+  const rays=new Float64Array(NANG);
+  let rW=0;
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      if(Math.abs(cur[y*N+x])<thr) continue;
+      const dx=x-srcX, dy=y-srcY;
+      const r=Math.sqrt(dx*dx+dy*dy);
+      if(r>rW) rW=r;
+      let a=Math.atan2(dy,dx); if(a<0) a+=Math.PI*2;
+      const b=Math.min(NANG-1, (a/(Math.PI*2)*NANG)|0);
+      if(r>rays[b]) rays[b]=r;
+    }
+  }
+  let rmin=Infinity, rmax=0, rsum=0, cnt=0;
+  for(let b=0;b<NANG;b++){ const r=rays[b]; if(r>0){ rmin=Math.min(rmin,r); rmax=Math.max(rmax,r); rsum+=r; cnt++; } }
+  const aniso = cnt>NANG*0.7 && rsum>0 ? (rmax-rmin)/(rsum/cnt) : NaN;
+
+  // (c) 局部激发（粒子）：质心 / 宽度 / 总量
+  let wsum=0, cx=0, cy=0;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const w=cur[y*N+x]*cur[y*N+x];
+    if(w>0){ wsum+=w; cx+=x*w; cy+=y*w; }
+  }
+  let pw=NaN;
+  if(wsum>1e-12){
+    cx/=wsum; cy/=wsum;
+    let var2=0;
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      const w=cur[y*N+x]*cur[y*N+x];
+      if(w>0){ var2+=w*((x-cx)*(x-cx)+(y-cy)*(y-cy)); }
+    }
+    pw=Math.sqrt(var2/wsum);
+    const H=hist;
+    // 速度必须用「网络自己的度量」来算，才能和因果上限 1 边/步 直接比较：
+    // 8 邻 → 切比雪夫距离；4 邻 → L1 距离。并在窗口上平滑掉周期性抖动。
+    H.cent.push({n:step,cx,cy});
+    if(H.cent.length>4000) H.cent.shift();
+    let vCausal=NaN;
+    const WIN=Math.min(24, H.cent.length-1);
+    if(WIN>=4){
+      const a=H.cent[H.cent.length-1], b=H.cent[H.cent.length-1-WIN];
+      const dx=Math.abs(a.cx-b.cx), dy=Math.abs(a.cy-b.cy);
+      const d = cfg.nb===8 ? Math.max(dx,dy) : (dx+dy);
+      vCausal = d/(a.n-b.n);
+    }
+    H.pv.push({n:step,cx,cy,v:vCausal});
+    if(H.pv.length>4000) H.pv.shift();
+  }
+
+  hist.n.push(step); hist.rC.push(rC); hist.rW.push(rW);
+  hist.aniso.push(aniso); hist.pw.push(pw); hist.mass.push(wsum);
+  hist.nTouched = nTouched;
+  if(hist.n.length>6000){ for(const k of ['n','rC','rW','aniso','pw','mass']) hist[k].shift(); }
+}
+
+// 最小二乘斜率（取 [40%, end] 区间，避开起始瞬态）
+function slope(xs, ys, end){
+  const m = (end && end>0) ? Math.min(end+1, xs.length) : xs.length;
+  if(m<6) return NaN;
+  const s=Math.floor(m*0.4);
+  let sx=0,sy=0,sxx=0,sxy=0,c=0;
+  for(let i=s;i<m;i++){
+    const X=xs[i], Y=ys[i];
+    if(!isFinite(Y)) continue;
+    sx+=X; sy+=Y; sxx+=X*X; sxy+=X*Y; c++;
+  }
+  if(c<3) return NaN;
+  return (c*sxy-sx*sy)/(c*sxx-sx*sx);
+}
+
+// 前沿一旦撞上边界就会饱和，斜率必须只在「自由扩张段」上拟合
+function growthEnd(){
+  const H=hist, m=H.n.length;
+  if(m<3) return 0;
+  const limW=N*0.44, limC=N*0.85;
+  let e=0;
+  for(let i=1;i<m;i++){
+    if(H.rW[i]>=limW || H.rC[i]>=limC) break;
+    e=i;
+  }
+  return e;
+}
+
+/* ============================================================
+   4. 时空图（实验 2 的光锥）
+   ============================================================ */
+function pushSpacetimeRow(){
+  if(stRow>=ST_H) return;
+  const img=stCtx.createImageData(N,1), d=img.data;
+  const y=srcY, inv=1/lastMax;
+  for(let x=0;x<N;x++){
+    const i=y*N+x;
+    const v=Math.max(-1,Math.min(1, cur[i]*inv));
+    const t=touched[i];
+    let r,g,b;
+    if(cfg.rule==='life'){
+      const on=cur[i]>0.5;
+      r=on?90:8; g=on?240:14; b=on?190:26;
+    } else {
+      const a=Math.abs(v)**0.45;
+      if(v>=0){ r=20+235*a; g=40+120*a; b=70+40*a; }
+      else    { r=20+30*a;  g=70+150*a; b=90+165*a; }
+    }
+    if(t && Math.abs(v)<1e-3){ r=Math.max(r,26); g=Math.max(g,32); b=Math.max(b,60); }
+    const o=x*4; d[o]=r; d[o+1]=g; d[o+2]=b; d[o+3]=255;
+  }
+  stCtx.putImageData(img,0,stRow); stRow++;
+}
+
+/* ============================================================
+   5. 绘制
+   ============================================================ */
+function drawField(){
+  const W=fieldCv.width, H=fieldCv.height;
+  fctx.setTransform(1,0,0,1,0,0);
+  fctx.fillStyle='#05080f'; fctx.fillRect(0,0,W,H);
+  if(!cur) return;
+
+  if(exp===2 && stCanvas){
+    // 实验 2 主画面 = 时空图。横纵用同一个像素比例 → c=1 恰好是 45°
+    const pad=26*DPR;
+    const k=Math.min((W-pad*2)/N, (H-pad*2)/ST_H);
+    const dw=N*k, dh=ST_H*k;
+    const ox=(W-dw)/2, oy=(H-dh)/2;
+    fctx.imageSmoothingEnabled=false;
+    fctx.drawImage(stCanvas, 0,0,N,ST_H, ox,oy,dw,dh);
+    fctx.strokeStyle='rgba(120,150,214,.28)'; fctx.lineWidth=1; fctx.strokeRect(ox,oy,dw,dh);
+    const cxp=ox+(srcX+0.5)*k;
+    function cone(v,color,lab,t){
+      // 锥线裁剪在时空图框内（超出部分表示因果锥已越出这块格子）
+      fctx.save();
+      fctx.beginPath(); fctx.rect(ox,oy,dw,dh); fctx.clip();
+      fctx.strokeStyle=color; fctx.lineWidth=1.6*DPR; fctx.setLineDash([6*DPR,5*DPR]);
+      fctx.beginPath();
+      fctx.moveTo(cxp,oy); fctx.lineTo(cxp+v*ST_H*k, oy+dh);
+      fctx.moveTo(cxp,oy); fctx.lineTo(cxp-v*ST_H*k, oy+dh);
+      fctx.stroke(); fctx.setLineDash([]);
+      fctx.restore();
+      // 标签贴在右支上，纵向错开避免互相压字
+      let lx=cxp+v*ST_H*k*t+7*DPR, ly=oy+dh*t;
+      fctx.font=`600 ${11*DPR}px "PingFang SC",system-ui`;
+      const tw=fctx.measureText(lab).width;
+      if(lx+tw>ox+dw-4*DPR) lx=cxp+v*ST_H*k*t-tw-9*DPR;
+      fctx.fillStyle=color; fctx.textAlign='left'; fctx.textBaseline='middle';
+      fctx.fillText(lab, lx, ly);
+    }
+    cone(1,'rgba(255,107,138,.95)','因果上限 c=1', 0.42);
+    if(cfg.rule!=='life') cone(Math.sqrt(cfg.kappa),'rgba(95,208,255,.95)',`波前 √κ=${Math.sqrt(cfg.kappa).toFixed(2)}`, 0.82);
+    fctx.fillStyle='rgba(180,200,240,.8)'; fctx.font=`${11*DPR}px "PingFang SC",system-ui`;
+    fctx.textAlign='center'; fctx.textBaseline='bottom';
+    fctx.fillText('x（沿源点的空间切片）', ox+dw/2, oy-7*DPR);
+    fctx.save(); fctx.translate(ox-9*DPR, oy+dh/2); fctx.rotate(-Math.PI/2);
+    fctx.textAlign='center'; fctx.textBaseline='bottom';
+    fctx.fillText('n（更新次数，向下增加）', 0,0); fctx.restore();
+    return;
+  }
+
+  // 其它实验：2D 场 + 因果球边界
+  const img=offCtx.createImageData(N,N), d=img.data;
+  const inv=1/lastMax;
+  for(let i=0;i<N*N;i++){
+    let r,g,b;
+    if(cfg.rule==='life'){
+      const on=cur[i]>0.5;
+      r=on?110:7; g=on?245:12; b=on?195:24;
+    } else {
+      const v=Math.max(-1,Math.min(1,cur[i]*inv));
+      const a=Math.abs(v)**0.45;
+      if(v>=0){ r=18+237*a; g=34+126*a; b=64+46*a; }
+      else    { r=16+34*a;  g=64*1+152*a; b=84+171*a; }
+    }
+    if(touched[i] && (cfg.rule==='life'? cur[i]<0.5 : Math.abs(cur[i]*inv)<1e-3)){
+      r=Math.max(r,24); g=Math.max(g,30); b=Math.max(b,58);
+    }
+    const o=i*4; d[o]=r; d[o+1]=g; d[o+2]=b; d[o+3]=255;
+  }
+  offCtx.putImageData(img,0,0);
+  const side=Math.min(W,H), ox=(W-side)/2, oy=(H-side)/2;
+  fctx.imageSmoothingEnabled=false;
+  fctx.drawImage(off,0,0,N,N,ox,oy,side,side);
+
+  // 因果球理论边界（4 邻 = L1 菱形；8 邻 = 切比雪夫方形）
+  const k=side/N, r=step;
+  if(r>0 && r<N*0.48 && !extra.length && cfg.seed==='point'){
+    fctx.strokeStyle='rgba(255,107,138,.85)'; fctx.lineWidth=1.5*DPR; fctx.setLineDash([5,4]);
+    fctx.beginPath();
+    const cxp=ox+(srcX+0.5)*k, cyp=oy+(srcY+0.5)*k, R=r*k;
+    if(cfg.nb===4){
+      fctx.moveTo(cxp,cyp-R); fctx.lineTo(cxp+R,cyp); fctx.lineTo(cxp,cyp+R); fctx.lineTo(cxp-R,cyp); fctx.closePath();
+    } else {
+      fctx.rect(cxp-R,cyp-R,2*R,2*R);
+    }
+    fctx.stroke(); fctx.setLineDash([]);
+    fctx.fillStyle='rgba(255,107,138,.95)'; fctx.font=`600 ${11*DPR}px system-ui`; fctx.textAlign='center';
+    fctx.fillText('因果球 d_G ≤ n', cxp, cyp-R-6*DPR);
+  }
+  fctx.strokeStyle='rgba(120,150,214,.25)'; fctx.lineWidth=1; fctx.strokeRect(ox,oy,side,side);
+}
+
+/* --- 通用折线图 --- */
+function drawPlot(series, opts){
+  const W=plotCv.width, H=plotCv.height;
+  pctx.setTransform(1,0,0,1,0,0);
+  pctx.clearRect(0,0,W,H);
+  const M={l:52*DPR,r:14*DPR,t:14*DPR,b:36*DPR};
+  const pw=Math.max(10,W-M.l-M.r), ph=Math.max(10,H-M.t-M.b);
+  opts=opts||{};
+  let x0=opts.x0, x1=opts.x1, y0=opts.y0, y1=opts.y1;
+  if(x0===undefined){
+    x0=Infinity; x1=-Infinity; y0=Infinity; y1=-Infinity;
+    for(const s of series) for(const p of s.pts){
+      if(!isFinite(p[0])||!isFinite(p[1])) continue;
+      x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]);
+      y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]);
+    }
+    if(!isFinite(x0)){ x0=0;x1=1;y0=0;y1=1; }
+    if(opts.yFromZero) y0=0;
+    const pad=(y1-y0)*0.08||0.5; y0-=pad; y1+=pad;
+    if(x1<=x0) x1=x0+1;
+  }
+  const SX=v=>M.l+(v-x0)/(x1-x0)*pw;
+  const SY=v=>M.t+ph-(v-y0)/(y1-y0)*ph;
+
+  pctx.strokeStyle='rgba(120,150,214,.18)'; pctx.lineWidth=1;
+  pctx.strokeRect(M.l,M.t,pw,ph);
+  pctx.font=`${10.5*DPR}px system-ui`; pctx.textBaseline='middle'; pctx.textAlign='right';
+  for(let i=0;i<=4;i++){
+    const v=y0+(y1-y0)*i/4, sy=SY(v);
+    pctx.strokeStyle='rgba(120,150,214,.10)';
+    pctx.beginPath(); pctx.moveTo(M.l,sy); pctx.lineTo(M.l+pw,sy); pctx.stroke();
+    pctx.fillStyle='rgba(160,180,220,.8)';
+    pctx.fillText(fmtNum(v), M.l-6*DPR, sy);
+  }
+  pctx.textAlign='center'; pctx.textBaseline='top';
+  for(let i=0;i<=4;i++){
+    const v=x0+(x1-x0)*i/4, sx=SX(v);
+    pctx.strokeStyle='rgba(120,150,214,.10)';
+    pctx.beginPath(); pctx.moveTo(sx,M.t); pctx.lineTo(sx,M.t+ph); pctx.stroke();
+    pctx.fillStyle='rgba(160,180,220,.8)';
+    pctx.fillText(fmtNum(v), sx, M.t+ph+6*DPR);
+  }
+  pctx.fillStyle='rgba(143,163,205,.95)'; pctx.font=`600 ${11*DPR}px "PingFang SC",system-ui`;
+  if(opts.xlab){ pctx.textAlign='center'; pctx.fillText(opts.xlab, M.l+pw/2, M.t+ph+20*DPR); }
+  if(opts.ylab){ pctx.save(); pctx.translate(13*DPR, M.t+ph/2); pctx.rotate(-Math.PI/2);
+    pctx.textAlign='center'; pctx.textBaseline='middle'; pctx.fillText(opts.ylab,0,0); pctx.restore(); }
+
+  for(const s of series){
+    if(!s.pts.length) continue;
+    pctx.strokeStyle=s.color; pctx.lineWidth=(s.w||1.8)*DPR;
+    if(s.dash) pctx.setLineDash(s.dash.map(v=>v*DPR)); else pctx.setLineDash([]);
+    pctx.beginPath(); let started=false;
+    for(const p of s.pts){
+      if(!isFinite(p[0])||!isFinite(p[1])){ started=false; continue; }
+      const sx=SX(p[0]), sy=SY(p[1]);
+      started?pctx.lineTo(sx,sy):(pctx.moveTo(sx,sy),started=true);
+    }
+    pctx.stroke(); pctx.setLineDash([]);
+    if(s.dots) for(const p of s.pts){
+      if(!isFinite(p[1])) continue;
+      pctx.fillStyle=s.color; pctx.beginPath(); pctx.arc(SX(p[0]),SY(p[1]),2.2*DPR,0,6.2832); pctx.fill();
+    }
+  }
+  // 图例
+  let ly=M.t+8*DPR;
+  pctx.font=`${10.5*DPR}px system-ui`; pctx.textAlign='left'; pctx.textBaseline='middle';
+  for(const s of series){
+    if(!s.name) continue;
+    pctx.strokeStyle=s.color; pctx.lineWidth=2.4*DPR;
+    if(s.dash) pctx.setLineDash(s.dash.map(v=>v*DPR)); else pctx.setLineDash([]);
+    pctx.beginPath(); pctx.moveTo(M.l+pw-108*DPR,ly); pctx.lineTo(M.l+pw-86*DPR,ly); pctx.stroke(); pctx.setLineDash([]);
+    pctx.fillStyle='rgba(220,232,255,.9)'; pctx.fillText(s.name, M.l+pw-80*DPR, ly);
+    ly+=15*DPR;
+  }
+}
+function fmtNum(v){
+  const a=Math.abs(v);
+  if(a>=1e5) return v.toExponential(1);
+  if(a>=100) return v.toFixed(0);
+  if(a>=10) return v.toFixed(1);
+  if(a>=1) return v.toFixed(2);
+  return v.toFixed(3);
+}
+
+function drawAll(){ drawField(); drawPlotForExp(); }
+
+function drawPlotForExp(){
+  const H=hist; if(!H) return;
+  if(exp===1){
+    $('plotTitle').textContent='前沿半径 r(n)';
+    $('plotSub').textContent='因果支撑 vs 波幅前沿';
+    const pC=[], pW=[], pT=[], pS=[];
+    for(let i=0;i<H.n.length;i++){
+      pC.push([H.n[i],H.rC[i]]); pW.push([H.n[i],H.rW[i]]);
+      pT.push([H.n[i],H.n[i]]);  pS.push([H.n[i],Math.sqrt(cfg.kappa)*H.n[i]]);
+    }
+    drawPlot([
+      {pts:pT,color:'rgba(255,107,138,.45)',dash:[5,4],name:'理论 c=1·n'},
+      {pts:pS,color:'rgba(95,208,255,.45)',dash:[5,4],name:'理论 √κ·n'},
+      {pts:pC,color:'#ff6b8a',name:'因果前沿 r_C'},
+      {pts:pW,color:'#5fd0ff',name:'波幅前沿 r_W'}
+    ],{xlab:'更新次数 n',ylab:'半径（边 / 格）',yFromZero:true});
+  } else if(exp===2){
+    $('plotTitle').textContent='|B(n)| 增长与有效维数';
+    $('plotSub').textContent='log|B| vs log n';
+    const pts=[], fit=[];
+    if(ballCount){
+      for(let d=1;d<ballCount.length;d++){
+        if(ballCount[d]<=1) continue;
+        pts.push([Math.log(d),Math.log(ballCount[d])]);
+      }
+      if(isFinite(dEff) && pts.length){
+        const x0=pts[0][0], y0=pts[0][1];
+        for(const p of pts) fit.push([p[0], y0+dEff*(p[0]-x0)]);
+      }
+    }
+    drawPlot([
+      {pts:fit,color:'rgba(255,180,84,.6)',dash:[5,4],name:`拟合斜率 d=${isFinite(dEff)?dEff.toFixed(2):'—'}`},
+      {pts,color:'#b98cff',name:'log |B(n)|',dots:true}
+    ],{xlab:'log n',ylab:'log |B(n)|'});
+  } else if(exp===3){
+    $('plotTitle').textContent='局部激发的稳定性';
+    $('plotSub').textContent='宽度（是否弥散）与质心速度';
+    const pw=[], pv=[];
+    for(let i=0;i<H.n.length;i++) if(isFinite(H.pw[i])) pw.push([H.n[i],H.pw[i]]);
+    for(const p of H.pv) if(isFinite(p.v)) pv.push([p.n,p.v]);
+    drawPlot([
+      {pts:pw,color:'#4be3a6',name:'rms 宽度'},
+      {pts:pv,color:'#ffb454',name:'质心速度 |v|'}
+    ],{xlab:'更新次数 n',ylab:'格 / 步',yFromZero:true});
+  } else {
+    if(dispData){
+      $('plotTitle').textContent='色散关系 ω(k)';
+      $('plotSub').textContent='实测 vs 连续极限';
+      const meas=[], cont=[], latt=[];
+      for(const d of dispData){
+        meas.push([d.k,d.wMeas]); cont.push([d.k,d.wCont]); latt.push([d.k,d.wExact]);
+      }
+      drawPlot([
+        {pts:cont,color:'rgba(255,107,138,.75)',dash:[6,4],name:'连续极限 √κ·k'},
+        {pts:latt,color:'rgba(255,180,84,.6)',dash:[3,3],name:'格点解析解'},
+        {pts:meas,color:'#5fd0ff',name:'实测 ω',dots:true}
+      ],{xlab:'波数 k',ylab:'频率 ω',yFromZero:true});
+    } else {
+      $('plotTitle').textContent='各向异性 A(n)';
+      $('plotSub').textContent='越小越接近连续、各向同性';
+      const pa=[];
+      for(let i=0;i<H.n.length;i++) if(isFinite(H.aniso[i])) pa.push([H.n[i],H.aniso[i]]);
+      const ref=[]; if(H.n.length) { ref.push([H.n[0],0.343]); ref.push([H.n[H.n.length-1],0.343]); }
+      drawPlot([
+        {pts:ref,color:'rgba(255,107,138,.5)',dash:[5,4],name:'菱形因果球 0.343'},
+        {pts:pa,color:'#4be3a6',name:'波前各向异性'}
+      ],{xlab:'更新次数 n',ylab:'(r_max−r_min)/r_mean',yFromZero:true});
+    }
+  }
+}
+
+/* ============================================================
+   6. 色散测量（一维链，独立于主模拟）
+   ============================================================ */
+function measureDispersion(){
+  const L=512, K=cfg.kappa, m2=cfg.mass*cfg.mass, STEPS=900;
+  const out=[];
+  for(let mi=1;mi<=24;mi++){
+    const k=Math.PI*mi/24;
+    let p=new Float64Array(L), c=new Float64Array(L), nx=new Float64Array(L);
+    for(let x=0;x<L;x++){ const v=Math.cos(k*x); c[x]=v; p[x]=v; }
+    // 数 x=0 处的零点，得到半周期
+    let crossings=0, firstCross=-1, lastCross=-1, sPrev=Math.sign(c[0]);
+    for(let n=1;n<=STEPS;n++){
+      for(let x=0;x<L;x++){
+        const xm=(x-1+L)%L, xp=(x+1)%L;
+        let v=2*c[x]-p[x]+K*(c[xm]+c[xp]-2*c[x]);
+        if(m2) v-=m2*c[x];
+        nx[x]=v;
+      }
+      const t=p; p=c; c=nx; nx=t;
+      const s=Math.sign(c[0]);
+      if(s!==0 && sPrev!==0 && s!==sPrev){
+        crossings++;
+        if(firstCross<0) firstCross=n; lastCross=n;
+      }
+      if(s!==0) sPrev=s;
+    }
+    let wMeas=NaN;
+    if(crossings>=2 && lastCross>firstCross){
+      const halfPeriod=(lastCross-firstCross)/(crossings-1);
+      wMeas=Math.PI/halfPeriod;
+    }
+    const sk=Math.sqrt(K)*Math.sin(k/2);
+    const wExact = sk<=1 ? 2*Math.asin(Math.min(1,sk)) : NaN;   // 无质量解析解
+    out.push({k, wMeas, wCont:Math.sqrt(K)*k, wExact: m2?NaN:wExact});
+  }
+  dispData=out;
+  drawPlotForExp(); updateReadout();
+}
+
+/* ============================================================
+   7. 读数与判定
+   ============================================================ */
+/*  设计原则：
+ *  1) 每个数字都标明来源 —— 【解析】= 不用跑也能算出来，测它只是校验代码；
+ *                          【实测】= 没有解析解，数字本身才是结果。
+ *  2) 不用颜色表示「对/错」。阈值判绿等于先假定答案再检查，是把确认偏误写进代码。
+ *  3) 不给结论，只给「可能出现的情况 → 各自意味着什么」，由你看图自己判断。
+ */
+function met(label, value, kind, sub, cmp){
+  const tag = kind ? `<span class="src ${kind}">${kind==='ana'?'解析':'实测'}</span>` : '';
+  return `<div class="met"><b>${value}</b>${label}${tag}`+
+         (sub?`<s>${sub}</s>`:'') + (cmp?`<i>${cmp}</i>`:'') + `</div>`;
+}
+function devTxt(meas, pred, digits){
+  if(!isFinite(meas)||!isFinite(pred)||pred===0) return '';
+  const d=(meas/pred-1)*100;
+  return `参考值 ${pred.toFixed(digits||3)} · 差 ${d>=0?'+':''}${d.toFixed(1)}%`;
+}
+const F=(v,d)=>isFinite(v)?v.toFixed(d===undefined?3:d):'—';
+
+// 每个实验：可能看到的现象 → 各自的含义。a=有实质内容 b=正常但属同义反复 c=bug信号 d=陷阱/假象
+const CASES={
+1:[
+ ['b','红线（因果前沿）笔直、斜率贴着 1.000 —— 这就是<b>规则本身的定义</b>（每步最多传一条边），跑出来只能说明代码没写错，<b>不算发现</b>。'],
+ ['a','蓝线（波前）斜率明显<b>低于</b>红线 —— 这条有内容：<b>「信息最远能到哪」和「信号实际跑多快」是两件事</b>。类比真空光速与光在玻璃里的速度。'],
+ ['d','蓝线比 √κ 略高一点（比如 0.54 对 0.50）—— 正常。前沿判据会抓到波前之前那层极弱的「先驱波」，所以它夹在 √κ 和 1 之间。'],
+ ['c','蓝线斜率<b>超过红线</b>（大于 1）—— 物理上不可能，必然是 bug，或 κ&gt;0.5 数值发散。'],
+ ['d','两条线<b>同时走平</b> —— 前沿撞到边界饱和了，之后的斜率没有意义。看「拟合窗口」给的截止步数。'],
+ ['c','画面变成雪花噪点、数值爆掉 —— κ 超过稳定上限 0.5，是数值问题，不是物理效应。'],
+ ['a','把「长程重连」拉到几十条，红线<b>不再是直线、很快冲顶</b> —— 局部性一破坏光锥就没了。这是对「光锥来自只读邻居」最直接的反证，比测出 c=1 更有说服力。'],
+],
+2:[
+ ['a','出现清晰的<b>向下张开的 V 形</b>，亮区外缘贴蓝虚线，红虚线在更外侧 —— 光锥结构成形了。红蓝之间那条暗带就是先驱波。'],
+ ['b','红虚线恰好 45° —— 这是我把横纵按同一比例画出来的结果，属于坐标画法，<b>不是测量结论</b>。'],
+ ['d','V 形内部有<b>条纹或棋盘花纹</b> —— 不同波长跑不同速度（格点色散）造成的，是离散性肉眼可见的痕迹，不是 bug。'],
+ ['b','右图 log|B| 对 log n 成<b>直线、斜率≈2</b> —— 空间「看起来」二维。但二维是我搭进去的，这条只验证测量方法可靠。'],
+ ['d','右图末端<b>向下弯</b> —— 因果球把有限格子填满了。只看中段直线部分，末端要丢掉。'],
+ ['a','加长程边后右图<b>找不到直线段</b>、斜率远大于 2 —— 此时「空间维数」这个概念本身失效。这比"维数=2"信息量更大。'],
+],
+3:[
+ ['a','宽度曲线<b>长期持平</b>（增长率≈0）+ Σφ² 不变 + 质心匀速 —— 一个能自己保持形状还会移动的局部结构，够格叫「粒子」。'],
+ ['b','宽度<b>小幅周期抖动、但不长期上升</b> —— 同样算稳定。生命游戏滑翔机有 4 步相位循环，抖动是它自己的节奏。'],
+ ['d','宽度<b>持续上升</b>（线性或开根号）—— 在摊开弥散，不是粒子。<b>线性规则几乎必然如此</b>，这是预期结果而非失败。'],
+ ['a','宽度<b>先缩小、然后突然爆掉</b> —— 非线性坍缩。二维 sine-Gordon 很可能是这个下场，<u>这一条我没有确定答案，请你自己看曲线判断</u>。'],
+ ['c','质心速度 ≥ 1 —— 越过因果上限，必是 bug，或度量口径搞错（欧氏距离不能直接和"边数/步"的上限比）。'],
+ ['d','Σφ² <b>缓慢漂移</b> —— 数值积分误差在累积，跑太久的结果就不可信了。'],
+],
+4:[
+ ['b','小 k 段蓝点<b>贴在红虚线上</b>（近直线）—— 长波下确实长成了连续波动方程。红线是解析值，不是拟合。'],
+ ['a','大 k 段蓝点<b>明显掉到红线下方</b>、压向橙线 —— 离散性暴露出来了。<b>连续时空只是长波近似</b>，这是本实验最干净的一条结论。'],
+ ['b','蓝点几乎压在橙线（格点解析解）上 —— 说明测量方法准确。橙线是我算出来的，不是测的。'],
+ ['d','蓝点相对橙线有<b>零星跳动</b> —— 数零点法的整数量化误差，不是新物理。'],
+ ['a','各向异性随「宽度 σ」增大而<b>下降</b> —— 各向同性是在长波尺度上涌现的，底层格子本身并不各向同性。'],
+ ['d','各向异性<b>卡在 34% 不动</b> —— 你看的是因果球不是波前。4 邻格上因果球永远是菱形，放到多大也不会变圆。<b>这就是残留的绝对参考系，它并没有消失。</b>'],
+ ['c','各向异性恒为 0 或一直空白 —— 前沿还没成形，或种子太小、角度覆盖不足。'],
+],
+};
+function renderCases(){
+  const items=CASES[exp]||[];
+  $('cases').innerHTML =
+    `<div class="chd"><h4>可能出现的情况 —— 请自己对照左右两张图判断</h4>`+
+    `<div class="lg">`+
+      `<span><i style="background:var(--ok)"></i>有实质内容</span>`+
+      `<span><i style="background:var(--accent)"></i>正常，但属同义反复</span>`+
+      `<span><i style="background:#7f8fb0"></i>陷阱 / 别误读</span>`+
+      `<span><i style="background:var(--bad)"></i>bug 或数值问题</span>`+
+    `</div></div>`+
+    `<ul>${items.map(([c,t])=>`<li class="${c}">${t}</li>`).join('')}</ul>`;
+}
+function updateReadout(){
+  const H=hist; if(!H) return;
+  const ge=growthEnd();
+  const cC=slope(H.n,H.rC,ge), cW=slope(H.n,H.rW,ge);
+  const sk=Math.sqrt(cfg.kappa);
+  const aniso=H.aniso.length?H.aniso[H.aniso.length-1]:NaN;
+  const M=$('metrics'), V=$('verdict');
+  let html='', v='';
+  const win = ge>0 ? `拟合窗口 <code>n ≤ ${H.n[ge]}</code>（前沿撞边界前的自由扩张段）` : `拟合窗口：样本还不够`;
+
+  if(exp===1){
+    html += met('因果速度 c<sub>因</sub>', F(cC), 'ana', '边/步', '规则定义即 1.000，测它只为查错');
+    html += met('波前速度 c<sub>波</sub>', F(cW), 'obs', '格/步', devTxt(cW, sk));
+    html += met('因果球 |B(n)|', H.nTouched?H.nTouched.toLocaleString('en-US'):'0', 'ana', '已被影响的节点数', 'L1 球 = 2n²+2n+1');
+    html += met('长程边', extra.length, null, '设定值 · 破坏局部性');
+    html += met('κ 稳定上限', '0.50', 'ana', `当前 κ=${cfg.kappa.toFixed(2)}`, cfg.kappa>0.5?'已超出，结果不可信':'在稳定区内');
+    v = `${win}。当前实测：c<sub>因</sub>=<b>${F(cC)}</b>，c<sub>波</sub>=<b>${F(cW)}</b>；`+
+        `解析参考值 1.000 与 √κ=<b>${sk.toFixed(3)}</b>。长程边 <b>${extra.length}</b> 条。`;
+  } else if(exp===2){
+    html += met('光锥斜率', F(cC), 'ana', '因果边界 dx/dn', '同上，1.000 是定义');
+    html += met('波前斜率', F(cW), 'obs', '亮区边界', devTxt(cW, sk));
+    html += met('有效空间维数', F(dEff), 'ana', '|B(n)| ~ n^d 拟合', '二维方格 → 参考值 2.000');
+    html += met('时空图行数', `${Math.min(stRow,ST_H)} / ${ST_H}`, null, '已记录的更新次数');
+    html += met('拟合窗口', ge>0?`n ≤ ${H.n[ge]}`:'—', null, '超出后前沿饱和');
+    v = `${win}。左图横轴是沿源点的空间切片，纵轴向下是更新次数；横纵<b>等比例</b>，所以 c=1 恰好 45°。`+
+        `当前实测：光锥斜率=<b>${F(cC)}</b>，波前斜率=<b>${F(cW)}</b>，有效维数=<b>${F(dEff)}</b>。`;
+  } else if(exp===3){
+    const pw=H.pw.length?H.pw[H.pw.length-1]:NaN;
+    const growth=slope(H.n,H.pw,0);
+    const vs=H.pv.slice(-40).map(p=>p.v).filter(isFinite);
+    const vAvg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:NaN;
+    const isLife=cfg.rule==='life';
+    const kindV = isLife?'ana':'obs';
+    html += met('激发宽度', F(pw,2), 'obs', 'rms 半径（格）');
+    html += met('宽度增长率', F(growth,4), 'obs', '0 = 不弥散，正 = 摊开', '无解析解，看趋势');
+    html += met('质心速度 |v|', F(vAvg), kindV, (cfg.nb===8?'切比雪夫':'L1')+' 边/步',
+                isLife?'滑翔机 4 步走 1 格 → 参考值 0.250':'非线性结构，无解析值');
+    html += met('因果上限', '1.000', 'ana', 'v 必须小于它');
+    html += met('总量 Σφ²', H.mass.length?H.mass[H.mass.length-1].toExponential(2):'—', 'obs', '守恒性参考');
+    v = `当前实测：宽度=<b>${F(pw,2)}</b>，增长率=<b>${F(growth,4)}</b>，质心速度=<b>${F(vAvg)}</b>（上限 1.000），`+
+        `Σφ²=<b>${H.mass.length?H.mass[H.mass.length-1].toExponential(2):'—'}</b>。`+
+        (isLife?`滑翔机的 0.250 是已知常数，这里只验证测量口径正确。`
+               :`<b>非线性结构是否稳定没有解析答案，请看宽度曲线自行判断。</b>`);
+  } else {
+    html += met('波前各向异性', isFinite(aniso)?(aniso*100).toFixed(1)+'%':'—', 'obs',
+                '(r_max−r_min)/r_mean', `当前种子宽度 σ=${cfg.width.toFixed(1)}`);
+    html += met('因果球各向异性', '34.3%', 'ana', '4 邻 L1 菱形', '与尺度无关，恒定');
+    html += met('有效空间维数', F(dEff), 'ana', '参考值 2.000');
+    if(dispData){
+      const small=dispData.slice(0,4).filter(d=>isFinite(d.wMeas));
+      let cFit=NaN;
+      if(small.length){
+        let sxy=0,sxx=0;
+        for(const d of small){ sxy+=d.k*d.wMeas; sxx+=d.k*d.k; }
+        cFit=sxy/sxx;
+      }
+      const big=dispData[dispData.length-1];
+      const dv=big&&isFinite(big.wMeas)&&big.wCont>0 ? (1-big.wMeas/big.wCont)*100 : NaN;
+      html += met('小 k 实测 ω/k', isFinite(cFit)?cFit.toFixed(4):'—', 'obs', '长波段线性拟合', devTxt(cFit, sk, 4));
+      html += met('k=π 处偏离', isFinite(dv)?dv.toFixed(1)+'%':'—', 'ana', '离散性暴露程度',
+                  `κ=${cfg.kappa.toFixed(2)} → 1−(2/π)·asin√κ`);
+      v = `色散已测完。当前实测：小 k 段 ω/k=<b>${isFinite(cFit)?cFit.toFixed(4):'—'}</b>（解析参考 √κ=${sk.toFixed(4)}），`+
+          `k=π 处相对连续极限偏离 <b>${isFinite(dv)?dv.toFixed(1):'—'}%</b>；波前各向异性 <b>${isFinite(aniso)?(aniso*100).toFixed(1)+'%':'—'}</b>。`+
+          `图上红线=连续极限、橙线=格点解析解、蓝点=实测。`;
+    } else {
+      v = `当前实测：波前各向异性 <b>${isFinite(aniso)?(aniso*100).toFixed(1)+'%':'—'}</b>（种子宽度 σ=${cfg.width.toFixed(1)}），`+
+          `有效维数 <b>${F(dEff)}</b>。想看定量的连续极限，点左侧「测量 ω(k) 全谱」。`+
+          `建议把 σ 从小调到大，观察各向异性怎么变。`;
+    }
+  }
+  M.innerHTML=html; V.innerHTML=v; renderCases();
+}
+
+/* ============================================================
+   8. 实验切换与 UI
+   ============================================================ */
+const PRESET={
+  1:{rule:'wave', seed:'point', width:1,   kappa:0.25, mass:0, nb:4, bnd:'fixed', rewire:0, speed:2, N:128},
+  2:{rule:'wave', seed:'point', width:1,   kappa:0.25, mass:0, nb:4, bnd:'fixed', rewire:0, speed:1, N:128},
+  3:{rule:'life', seed:'glider',width:3,   kappa:0.25, mass:0, nb:8, bnd:'torus', rewire:0, speed:2, N:64},
+  4:{rule:'wave', seed:'gauss', width:6,   kappa:0.25, mass:0, nb:4, bnd:'fixed', rewire:0, speed:2, N:128}
+};
+function setExp(e){
+  exp=e; dispData=null;
+  for(const t of document.querySelectorAll('.tab')) t.classList.toggle('on', +t.dataset.exp===e);
+  const p=PRESET[e];
+  Object.assign(cfg,p);
+  syncUI();
+  $('grpDisp').style.display = e===4?'':'none';
+  $('fieldTitle').textContent = e===2?'时空图（光锥）':'场 φ 与因果球';
+  $('fieldSub').textContent   = e===2?'纵轴向下 = 更新次数':'红虚线 = 因果球边界';
+  reset();
+}
+function syncUI(){
+  $('pN').value=cfg.N; $('pNb').value=cfg.nb; $('pBnd').value=cfg.bnd;
+  $('pRw').value=cfg.rewire; $('vRw').textContent=cfg.rewire;
+  $('pRule').value=cfg.rule;
+  $('pK').value=cfg.kappa; $('vK').textContent=(+cfg.kappa).toFixed(2);
+  $('pM').value=cfg.mass;  $('vM').textContent=(+cfg.mass).toFixed(2);
+  $('pSeed').value=cfg.seed;
+  $('pW').value=cfg.width; $('vW').textContent=(+cfg.width).toFixed(1);
+  $('pSpd').value=cfg.speed; $('vSpd').textContent=cfg.speed;
+}
+function updateRunBtn(){
+  const b=$('btnRun');
+  b.textContent = running?'⏸ 暂停':'▶ 运行';
+  b.className = 'btn '+(running?'pause':'go');
+}
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setExp(+t.dataset.exp)));
+$('btnRun').addEventListener('click', ()=>{ running=!running; updateRunBtn(); });
+$('btnStep').addEventListener('click', ()=>{ running=false; updateRunBtn(); doStep(); drawAll(); updateReadout(); });
+$('btnReset').addEventListener('click', reset);
+$('btnDisp').addEventListener('click', measureDispersion);
+
+$('pN').addEventListener('change', e=>{ cfg.N=+e.target.value; reset(); });
+$('pNb').addEventListener('change', e=>{ cfg.nb=+e.target.value; reset(); });
+$('pBnd').addEventListener('change', e=>{ cfg.bnd=e.target.value; reset(); });
+$('pRule').addEventListener('change', e=>{
+  cfg.rule=e.target.value;
+  if(cfg.rule==='life'){ cfg.nb=8; if(cfg.seed!=='glider'&&cfg.seed!=='noise') cfg.seed='glider'; }
+  if(cfg.rule==='sg' && cfg.mass===0) cfg.mass=0.3;
+  syncUI(); reset();
+});
+$('pSeed').addEventListener('change', e=>{
+  cfg.seed=e.target.value;
+  if(cfg.seed==='breather'&&cfg.rule!=='sg'){ cfg.rule='sg'; if(cfg.mass===0) cfg.mass=0.3; }
+  if(cfg.seed==='glider'&&cfg.rule!=='life'){ cfg.rule='life'; cfg.nb=8; }
+  syncUI(); reset();
+});
+$('pRw').addEventListener('input', e=>{ cfg.rewire=+e.target.value; $('vRw').textContent=cfg.rewire; });
+$('pRw').addEventListener('change', reset);
+$('pK').addEventListener('input', e=>{ cfg.kappa=+e.target.value; $('vK').textContent=cfg.kappa.toFixed(2); drawAll(); updateReadout(); });
+$('pK').addEventListener('change', reset);
+$('pM').addEventListener('input', e=>{ cfg.mass=+e.target.value; $('vM').textContent=cfg.mass.toFixed(2); });
+$('pM').addEventListener('change', reset);
+$('pW').addEventListener('input', e=>{ cfg.width=+e.target.value; $('vW').textContent=cfg.width.toFixed(1); });
+$('pW').addEventListener('change', reset);
+$('pSpd').addEventListener('input', e=>{ cfg.speed=+e.target.value; $('vSpd').textContent=cfg.speed; });
+
+window.addEventListener('keydown', e=>{
+  const tag=(e.target&&e.target.tagName)||'';
+  if(tag==='INPUT'||tag==='SELECT') return;
+  if(e.code==='Space'){ running=!running; updateRunBtn(); e.preventDefault(); }
+  else if(e.key==='s'||e.key==='S'){ running=false; updateRunBtn(); doStep(); drawAll(); updateReadout(); }
+  else if(e.key==='r'||e.key==='R'){ reset(); }
+});
+
+/* ============================================================
+   9. 主循环
+   ============================================================ */
+let acc=0;
+function frame(){
+  if(running){
+    const lim = (exp===2) ? Math.min(cfg.speed, Math.max(0, ST_H-stRow)) : cfg.speed;
+    for(let k=0;k<lim;k++) doStep();
+    if(exp===2 && stRow>=ST_H){ running=false; updateRunBtn(); }
+    $('stepN').textContent=step;
+    drawAll(); updateReadout();
+  }
+  requestAnimationFrame(frame);
+}
+
+setExp(1);
+resizeCanvases();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

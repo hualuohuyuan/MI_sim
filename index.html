@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>M1 · Local Information Network Universe — Sandbox</title>
+<style>
+  :root{
+    --bg0:#060912; --bg1:#0b1120; --panel:rgba(17,25,44,.78); --line:rgba(118,148,214,.16);
+    --text:#e9eefb; --muted:#8fa3cd; --accent:#5fd0ff; --accent2:#b98cff;
+    --ok:#4be3a6; --warn:#ffb454; --bad:#ff6b8a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;color:var(--text);
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif}
+  body{background:
+    radial-gradient(1100px 760px at 76% -12%, #16223f 0%, transparent 56%),
+    radial-gradient(880px 660px at -6% 108%, #1b1033 0%, transparent 52%),
+    linear-gradient(158deg,var(--bg0),var(--bg1))}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+  header.bar{display:flex;align-items:center;gap:16px;padding:11px 18px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(8,13,26,.94),rgba(8,13,26,.4));
+    border-bottom:1px solid var(--line);backdrop-filter:blur(9px);z-index:6}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .dot{width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#c8fbff,#5fd0ff 45%,#2a6bff 100%);
+    box-shadow:0 0 14px #5fd0ff,0 0 32px rgba(95,208,255,.45)}
+  .brand h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+  .brand h1 small{display:block;font-size:10.5px;font-weight:400;color:var(--muted);letter-spacing:1.6px}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab{padding:7px 13px;border-radius:9px;border:1px solid var(--line);cursor:pointer;font-size:12.5px;
+    background:rgba(255,255,255,.03);color:var(--muted);transition:.16s;white-space:nowrap}
+  .tab:hover{color:#fff;border-color:var(--accent)}
+  .tab.on{background:linear-gradient(120deg,#2a6bff,#7a4bff);color:#fff;border-color:transparent;font-weight:600}
+
+  .runbar{display:flex;align-items:center;gap:7px;margin-left:auto;flex-wrap:wrap}
+  button.btn{padding:8px 13px;border-radius:9px;border:1px solid var(--line);cursor:pointer;
+    background:rgba(255,255,255,.04);color:var(--text);font-size:12.5px;transition:.16s;white-space:nowrap;font-family:inherit}
+  button.btn:hover{border-color:var(--accent);background:rgba(95,208,255,.1);color:#fff}
+  button.btn.go{background:linear-gradient(120deg,#1f8f5f,#2fd08a);border:none;font-weight:600;color:#04120c}
+  button.btn.pause{background:linear-gradient(120deg,#b8552f,#ffa14b);border:none;font-weight:600;color:#180a02}
+  .stepcnt{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .stepcnt b{color:#fff;font-size:14px}
+  a.langlink{font-size:11.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);
+    border-radius:8px;padding:6px 10px;transition:.16s}
+  a.langlink:hover{background:rgba(95,208,255,.1);border-color:var(--accent)}
+
+  .body{flex:1;min-height:0;display:flex}
+  aside{width:304px;flex-shrink:0;overflow-y:auto;padding:13px;border-right:1px solid var(--line);
+    background:rgba(9,14,28,.5)}
+  aside::-webkit-scrollbar{width:7px} aside::-webkit-scrollbar-thumb{background:rgba(120,150,210,.25);border-radius:4px}
+  .grp{margin-bottom:14px}
+  .grp h3{margin:0 0 7px;font-size:11px;color:var(--accent);letter-spacing:1.1px;text-transform:uppercase;font-weight:700}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:12px;color:var(--muted)}
+  .row select,.row input[type=text]{width:150px;padding:5px 7px;border-radius:7px;border:1px solid var(--line);
+    background:rgba(5,9,20,.75);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+  .row select:focus,.row input:focus{border-color:var(--accent)}
+  .row input[type=range]{width:112px;accent-color:var(--accent)}
+  .row .val{min-width:44px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums;font-size:11.5px}
+  .note{font-size:11px;color:var(--muted);line-height:1.6;background:rgba(95,208,255,.06);
+    border:1px solid rgba(95,208,255,.18);border-radius:8px;padding:8px 9px;margin-top:4px}
+  .note b{color:var(--text)}
+  .axiom{font-size:11px;color:var(--muted);line-height:1.65}
+  .axiom code{color:var(--accent2);background:rgba(185,140,255,.1);padding:1px 4px;border-radius:4px;font-size:10.5px}
+
+  main{flex:1;min-width:0;display:flex;flex-direction:column;padding:13px;gap:11px;overflow:hidden}
+  .stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:11px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px;
+    display:flex;flex-direction:column;min-width:0;min-height:0;backdrop-filter:blur(7px)}
+  .card .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-shrink:0}
+  .card .hd h2{margin:0;font-size:12.5px;font-weight:600}
+  .card .hd .sub{font-size:10.5px;color:var(--muted)}
+  .cv{flex:1;min-height:0;position:relative}
+  .cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .readout{flex-shrink:0;max-height:48%;overflow-y:auto;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;padding:11px 13px;backdrop-filter:blur(7px)}
+  .readout::-webkit-scrollbar{width:7px}
+  .readout::-webkit-scrollbar-thumb{background:rgba(120,150,210,.25);border-radius:4px}
+  .rowmetrics{display:flex;gap:15px;flex-wrap:wrap;align-items:flex-start}
+  .met{font-size:10.5px;color:var(--muted);line-height:1.35;min-width:112px}
+  .met b{display:block;font-size:18px;color:#fff;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .met s{display:block;text-decoration:none;color:rgba(143,163,205,.7);font-size:10px}
+
+  /* Current readout: states facts only, makes no judgement — hence neutral colour */
+  .verdict{margin-top:10px;font-size:12px;line-height:1.7;border-left:3px solid rgba(120,150,214,.5);
+    background:rgba(120,150,214,.07);border-radius:0 7px 7px 0;padding:8px 11px;color:#cfe0fa}
+  .verdict b{color:#fff}
+  .verdict code{color:var(--accent);font-size:11.5px}
+
+  /* Provenance tag on every metric */
+  .met .src{display:inline-block;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:5px;
+    vertical-align:2px;letter-spacing:.3px;font-weight:600}
+  .met .src.ana{background:rgba(185,140,255,.15);color:#c6a4ff;border:1px solid rgba(185,140,255,.32)}
+  .met .src.obs{background:rgba(95,208,255,.13);color:#7fdcff;border:1px solid rgba(95,208,255,.32)}
+  .met i{display:block;font-style:normal;font-size:10px;color:rgba(143,163,205,.85);margin-top:1px}
+
+  /* Case list — you read the plots and decide for yourself */
+  .cases{margin-top:11px;border-top:1px solid var(--line);padding-top:10px}
+  .cases .chd{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .cases h4{margin:0;font-size:11.5px;color:var(--accent);font-weight:700;letter-spacing:.5px}
+  .cases .lg{font-size:10px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+  .cases .lg span{display:flex;align-items:center;gap:4px}
+  .cases .lg i{width:7px;height:7px;border-radius:2px;display:inline-block}
+  .cases ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 20px}
+  .cases li{font-size:11.5px;line-height:1.62;color:var(--muted);padding-left:15px;position:relative}
+  .cases li::before{content:'';position:absolute;left:0;top:6px;width:7px;height:7px;border-radius:2px}
+  .cases li.a::before{background:var(--ok)}
+  .cases li.b::before{background:var(--accent)}
+  .cases li.c::before{background:var(--bad)}
+  .cases li.d::before{background:#7f8fb0}
+  .cases li b{color:var(--text);font-weight:600}
+  .cases li u{text-decoration:none;color:#c6a4ff}
+  @media(max-width:1280px){ .cases ul{grid-template-columns:1fr} }
+
+  @media(max-width:1040px){
+    .stage{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+    aside{width:240px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>M1 Local Information Network<small>NODES · EDGES · LOCAL UPDATE</small></h1>
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab on" data-exp="1">1 · Causal speed</div>
+      <div class="tab" data-exp="2">2 · Light cone</div>
+      <div class="tab" data-exp="3">3 · Particles</div>
+      <div class="tab" data-exp="4">4 · Continuum</div>
+    </div>
+    <div class="runbar">
+      <button class="btn go" id="btnRun">▶ Run</button>
+      <button class="btn" id="btnStep">Step</button>
+      <button class="btn" id="btnReset">Reset</button>
+      <div class="stepcnt">updates n = <b id="stepN">0</b></div>
+      <a class="langlink" href="index.zh.html">中文</a>
+    </div>
+  </header>
+
+  <div class="body">
+    <aside>
+      <div class="grp">
+        <h3>Every postulate there is</h3>
+        <div class="axiom">
+          Only three things are given: nodes <code>V</code>, edges <code>E</code>, and a local update rule <code>F</code>.<br><br>
+          <code>s_i(n+1) = F(s_i, {s_j : j∈N(i)})</code><br><br>
+          <b style="color:var(--bad)">No global reads.</b> A node may only see its immediate neighbours.
+          Space, time and the speed of light are <b>not</b> put in by hand — they are only allowed to be measured.
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>Network G</h3>
+        <div class="row"><span>Side N</span>
+          <select id="pN"><option>64</option><option selected>128</option><option>192</option><option>256</option></select></div>
+        <div class="row"><span>Neighbourhood</span>
+          <select id="pNb"><option value="4" selected>4-neighbour</option><option value="8">8-neighbour</option></select></div>
+        <div class="row"><span>Boundary</span>
+          <select id="pBnd"><option value="fixed" selected>Fixed (φ=0)</option><option value="torus">Periodic (torus)</option></select></div>
+        <div class="row"><span>Long-range edges</span>
+          <input type="range" id="pRw" min="0" max="400" step="10" value="0"><span class="val" id="vRw">0</span></div>
+        <div class="note">Long-range edges destroy locality. Add a few dozen and watch whether the causal speed
+          and the dimension survive — this is the direct control experiment for "locality is what makes the light cone".</div>
+      </div>
+
+      <div class="grp">
+        <h3>Local update rule F</h3>
+        <div class="row"><span>Rule</span>
+          <select id="pRule">
+            <option value="wave" selected>Wave (massless)</option>
+            <option value="kg">Klein–Gordon</option>
+            <option value="sg">sine-Gordon</option>
+            <option value="life">Game of Life</option>
+          </select></div>
+        <div class="row"><span>Coupling κ</span>
+          <input type="range" id="pK" min="0.02" max="0.5" step="0.01" value="0.25"><span class="val" id="vK">0.25</span></div>
+        <div class="row"><span>Mass m</span>
+          <input type="range" id="pM" min="0" max="0.6" step="0.01" value="0"><span class="val" id="vM">0.00</span></div>
+        <div class="note">Stability limit for κ is <b>0.5</b> (4-neighbour). Predicted wave speed <b>√κ</b>;
+          the causal bound is always <b>1 edge/step</b>. They are different quantities and both get measured.</div>
+      </div>
+
+      <div class="grp">
+        <h3>Initial perturbation</h3>
+        <div class="row"><span>Seed</span>
+          <select id="pSeed">
+            <option value="point" selected>Point impulse</option>
+            <option value="gauss">Gaussian packet</option>
+            <option value="breather">sine-Gordon breather</option>
+            <option value="glider">Life glider</option>
+            <option value="noise">Random noise</option>
+          </select></div>
+        <div class="row"><span>Width σ</span>
+          <input type="range" id="pW" min="0.6" max="12" step="0.2" value="3"><span class="val" id="vW">3.0</span></div>
+        <div class="row"><span>Steps / frame</span>
+          <input type="range" id="pSpd" min="1" max="12" step="1" value="2"><span class="val" id="vSpd">2</span></div>
+      </div>
+
+      <div class="grp" id="grpDisp" style="display:none">
+        <h3>Dispersion (experiment 4)</h3>
+        <button class="btn" id="btnDisp" style="width:100%">Measure full ω(k) spectrum</button>
+        <div class="note">Evolves each k separately on a 1-D chain and counts zero crossings to get the measured
+          dispersion relation, then compares it against the continuum limit ω=√κ·k.</div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="stage">
+        <div class="card">
+          <div class="hd"><h2 id="fieldTitle">Field φ and causal ball</h2><span class="sub" id="fieldSub"></span></div>
+          <div class="cv"><canvas id="field"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="hd"><h2 id="plotTitle">Front radius r(n)</h2><span class="sub" id="plotSub"></span></div>
+          <div class="cv"><canvas id="plot"></canvas></div>
+        </div>
+      </div>
+
+      <div class="readout">
+        <div class="rowmetrics" id="metrics"></div>
+        <div class="verdict" id="verdict">Press Run to start.</div>
+        <div class="cases" id="cases"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   0. State and utilities
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const fieldCv = $('field'), plotCv = $('plot');
+const fctx = fieldCv.getContext('2d'), pctx = plotCv.getContext('2d');
+let DPR = 1;
+
+const cfg = {
+  N:128, nb:4, bnd:'fixed', rewire:0,
+  rule:'wave', kappa:0.25, mass:0,
+  seed:'point', width:3, speed:2
+};
+let exp = 1;                      // current experiment
+let N=0, cur=null, prev=null, next=null;   // Float32 field
+let touched=null, tnext=null;     // Uint8 causal support (exact, immune to float error)
+let bfs=null;                     // graph distance from source
+let ballCount=null;               // |B(n)|
+let dEff=NaN;                     // effective spatial dimension
+let extra=[];                     // long-range edges [[a,b],...]
+let src=0, srcX=0, srcY=0;
+let step=0, running=false;
+let hist=null;                    // measurement history
+let stCanvas=null, stCtx=null, stRow=0, ST_H=96;   // spacetime diagram (height tracks N to stay isotropic)
+let dispData=null;                // dispersion results
+let off=null, offCtx=null;        // offscreen field canvas
+
+function resizeCanvases(){
+  DPR = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+  for (const cv of [fieldCv, plotCv]){
+    const w=cv.clientWidth, h=cv.clientHeight;
+    cv.width=Math.max(1,Math.round(w*DPR)); cv.height=Math.max(1,Math.round(h*DPR));
+  }
+  drawAll();
+}
+window.addEventListener('resize', resizeCanvases);
+
+/* ============================================================
+   1. Build the network + initialise
+   ============================================================ */
+function idx(x,y){ return y*N+x; }
+
+function buildExtraEdges(){
+  extra=[];
+  const n=cfg.rewire|0;
+  for(let k=0;k<n;k++){
+    const a=(Math.random()*N*N)|0, b=(Math.random()*N*N)|0;
+    if(a!==b) extra.push([a,b]);
+  }
+}
+
+// Neighbour enumeration — used by BFS / causal spreading (includes long-range edges)
+const OFF4=[[1,0],[-1,0],[0,1],[0,-1]];
+const OFF8=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+let adjExtra=null;   // Map: node -> [nodes]
+
+function buildAdjExtra(){
+  adjExtra=new Map();
+  for(const [a,b] of extra){
+    if(!adjExtra.has(a)) adjExtra.set(a,[]);
+    if(!adjExtra.has(b)) adjExtra.set(b,[]);
+    adjExtra.get(a).push(b); adjExtra.get(b).push(a);
+  }
+}
+
+function forEachNeighbor(i, fn){
+  const x=i%N, y=(i/N)|0;
+  const OFF = cfg.nb===8?OFF8:OFF4;
+  for(const [dx,dy] of OFF){
+    let nx=x+dx, ny=y+dy;
+    if(cfg.bnd==='torus'){ nx=(nx+N)%N; ny=(ny+N)%N; }
+    else if(nx<0||nx>=N||ny<0||ny>=N) continue;
+    fn(ny*N+nx);
+  }
+  const ex=adjExtra.get(i);
+  if(ex) for(const j of ex) fn(j);
+}
+
+// BFS: exact graph distance from the source -> gives |B(n)| and the effective dimension
+function computeBFS(){
+  bfs=new Int32Array(N*N).fill(-1);
+  const q=new Int32Array(N*N); let head=0, tail=0;
+  bfs[src]=0; q[tail++]=src;
+  let maxd=0;
+  while(head<tail){
+    const i=q[head++], d=bfs[i];
+    if(d>maxd) maxd=d;
+    forEachNeighbor(i, j=>{ if(bfs[j]<0){ bfs[j]=d+1; q[tail++]=j; } });
+  }
+  ballCount=new Float64Array(maxd+1);
+  for(let i=0;i<bfs.length;i++) if(bfs[i]>=0) ballCount[bfs[i]]++;
+  for(let d=1;d<=maxd;d++) ballCount[d]+=ballCount[d-1];   // cumulative
+  // Effective dimension: |B(n)| ~ n^d -> log-log linear fit over the mid range
+  const lo=Math.max(2, Math.floor(maxd*0.15)), hi=Math.max(lo+2, Math.floor(maxd*0.55));
+  let sx=0,sy=0,sxx=0,sxy=0,cnt=0;
+  for(let d=lo;d<=hi;d++){
+    if(ballCount[d]<=1) continue;
+    const X=Math.log(d), Y=Math.log(ballCount[d]);
+    sx+=X; sy+=Y; sxx+=X*X; sxy+=X*Y; cnt++;
+  }
+  dEff = cnt>1 ? (cnt*sxy-sx*sy)/(cnt*sxx-sx*sx) : NaN;
+}
+
+function allocate(){
+  N=cfg.N;
+  const n2=N*N;
+  cur=new Float32Array(n2); prev=new Float32Array(n2); next=new Float32Array(n2);
+  touched=new Uint8Array(n2); tnext=new Uint8Array(n2);
+  srcX=N>>1; srcY=N>>1; src=idx(srcX,srcY);
+  off=document.createElement('canvas'); off.width=N; off.height=N;
+  offCtx=off.getContext('2d');
+  // Height 0.72N: the causal cone reaches the boundary at n=N/2, so the cone fills the
+  // frame while x and n can still be drawn at the same pixel scale.
+  ST_H=Math.max(48, Math.round(N*0.72));
+  stCanvas=document.createElement('canvas'); stCanvas.width=N; stCanvas.height=ST_H;
+  stCtx=stCanvas.getContext('2d');
+  stCtx.fillStyle='#05080f'; stCtx.fillRect(0,0,N,ST_H); stRow=0;
+}
+
+function applySeed(){
+  cur.fill(0); prev.fill(0); next.fill(0); touched.fill(0);
+  const s=cfg.seed, w=cfg.width;
+  if(s==='point'){
+    cur[src]=1; prev[src]=1;            // start at rest
+    touched[src]=1;
+  } else if(s==='gauss'){
+    const r=Math.ceil(w*3.2);
+    for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+      const x=srcX+dx, y=srcY+dy; if(x<0||x>=N||y<0||y>=N) continue;
+      const v=Math.exp(-(dx*dx+dy*dy)/(2*w*w));
+      if(v>1e-6){ const i=idx(x,y); cur[i]=v; prev[i]=v; touched[i]=1; }
+    }
+  } else if(s==='breather'){
+    // Localised hump + initial velocity -> the nonlinear term can sustain it as a breather
+    const r=Math.ceil(w*3.2), amp=2.4;
+    for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+      const x=srcX+dx, y=srcY+dy; if(x<0||x>=N||y<0||y>=N) continue;
+      const v=amp*Math.exp(-(dx*dx+dy*dy)/(2*w*w));
+      if(Math.abs(v)>1e-6){ const i=idx(x,y); cur[i]=v; prev[i]=v*0.92; touched[i]=1; }
+    }
+  } else if(s==='glider'){
+    const cells=[[0,1],[1,2],[2,0],[2,1],[2,2]];
+    for(const [dy,dx] of cells){ const i=idx(srcX+dx-1, srcY+dy-1); cur[i]=1; touched[i]=1; }
+  } else if(s==='noise'){
+    const r=Math.ceil(w*3.2);
+    for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+      const x=srcX+dx, y=srcY+dy; if(x<0||x>=N||y<0||y>=N) continue;
+      const i=idx(x,y); cur[i]=(Math.random()*2-1); prev[i]=cur[i]; touched[i]=1;
+    }
+  }
+  if(cfg.rule==='life'){ for(let i=0;i<cur.length;i++) cur[i]=cur[i]>0.5?1:0; }
+}
+
+function reset(){
+  running=false; updateRunBtn();
+  step=0;
+  buildExtraEdges(); buildAdjExtra();
+  allocate();
+  computeBFS();
+  applySeed();
+  hist={n:[],rC:[],rW:[],aniso:[],pv:[],pw:[],mass:[],cent:[]};
+  measure();
+  drawAll();
+  updateReadout();
+}
+
+/* ============================================================
+   2. Local update — the only dynamics allowed
+   ============================================================ */
+function stepField(){
+  const K=cfg.kappa, m=cfg.mass, m2=m*m, rule=cfg.rule;
+  const torus=(cfg.bnd==='torus'), nb8=(cfg.nb===8);
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const i=y*N+x, c=cur[i];
+      let L=0;
+      // --- neighbours only, never a global read ---
+      const OFF = nb8?OFF8:OFF4;
+      for(let k=0;k<OFF.length;k++){
+        let nx=x+OFF[k][0], ny=y+OFF[k][1];
+        if(torus){ nx=(nx+N)%N; ny=(ny+N)%N; }
+        else if(nx<0||nx>=N||ny<0||ny>=N){ L+=(0-c); continue; }
+        L += cur[ny*N+nx]-c;
+      }
+      let v = 2*c - prev[i] + K*L;
+      if(rule==='kg') v -= m2*c;
+      else if(rule==='sg') v -= m2*Math.sin(c);
+      next[i]=v;
+    }
+  }
+  for(const [a,b] of extra){ next[a]+=K*(cur[b]-cur[a]); next[b]+=K*(cur[a]-cur[b]); }
+  const t=prev; prev=cur; cur=next; next=t;
+}
+
+function stepLife(){
+  const torus=(cfg.bnd==='torus');
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      let cnt=0;
+      for(let k=0;k<OFF8.length;k++){
+        let nx=x+OFF8[k][0], ny=y+OFF8[k][1];
+        if(torus){ nx=(nx+N)%N; ny=(ny+N)%N; }
+        else if(nx<0||nx>=N||ny<0||ny>=N) continue;
+        if(cur[ny*N+nx]>0.5) cnt++;
+      }
+      const a=cur[y*N+x]>0.5;
+      next[y*N+x] = (a ? (cnt===2||cnt===3) : (cnt===3)) ? 1 : 0;
+    }
+  }
+  const t=prev; prev=cur; cur=next; next=t;
+}
+
+// Causal support: expands strictly by "at most one edge per step"
+function stepTouched(){
+  tnext.set(touched);
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      const i=y*N+x; if(touched[i]) continue;
+      let hit=false;
+      const OFF = cfg.nb===8?OFF8:OFF4;
+      for(let k=0;k<OFF.length && !hit;k++){
+        let nx=x+OFF[k][0], ny=y+OFF[k][1];
+        if(cfg.bnd==='torus'){ nx=(nx+N)%N; ny=(ny+N)%N; }
+        else if(nx<0||nx>=N||ny<0||ny>=N) continue;
+        if(touched[ny*N+nx]) hit=true;
+      }
+      if(hit) tnext[i]=1;
+    }
+  }
+  for(const [a,b] of extra){ if(touched[a]) tnext[b]=1; if(touched[b]) tnext[a]=1; }
+  const t=touched; touched=tnext; tnext=t;
+}
+
+function doStep(){
+  if(cfg.rule==='life') stepLife(); else stepField();
+  stepTouched();
+  step++;
+  measure();
+  if(exp===2) pushSpacetimeRow();
+}
+
+/* ============================================================
+   3. Measurement — this is the actual point of the experiment
+   ============================================================ */
+const NANG=36;
+let lastMax=1;
+
+function measure(){
+  // (a) Causal front radius: largest graph distance inside the touched set
+  let rC=0, nTouched=0;
+  for(let i=0;i<touched.length;i++) if(touched[i]){ nTouched++; if(bfs[i]>rC) rC=bfs[i]; }
+
+  // (b) Amplitude front: farthest Euclidean distance where |φ| exceeds threshold,
+  //     plus per-direction radii (for anisotropy)
+  let mx=0;
+  for(let i=0;i<cur.length;i++){ const a=Math.abs(cur[i]); if(a>mx) mx=a; }
+  lastMax=Math.max(mx,1e-12);
+  const thr=Math.max(1e-5, mx*1e-3);
+  const rays=new Float64Array(NANG);
+  let rW=0;
+  for(let y=0;y<N;y++){
+    for(let x=0;x<N;x++){
+      if(Math.abs(cur[y*N+x])<thr) continue;
+      const dx=x-srcX, dy=y-srcY;
+      const r=Math.sqrt(dx*dx+dy*dy);
+      if(r>rW) rW=r;
+      let a=Math.atan2(dy,dx); if(a<0) a+=Math.PI*2;
+      const b=Math.min(NANG-1, (a/(Math.PI*2)*NANG)|0);
+      if(r>rays[b]) rays[b]=r;
+    }
+  }
+  let rmin=Infinity, rmax=0, rsum=0, cnt=0;
+  for(let b=0;b<NANG;b++){ const r=rays[b]; if(r>0){ rmin=Math.min(rmin,r); rmax=Math.max(rmax,r); rsum+=r; cnt++; } }
+  const aniso = cnt>NANG*0.7 && rsum>0 ? (rmax-rmin)/(rsum/cnt) : NaN;
+
+  // (c) Localised excitation (particle): centroid / width / total
+  let wsum=0, cx=0, cy=0;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const w=cur[y*N+x]*cur[y*N+x];
+    if(w>0){ wsum+=w; cx+=x*w; cy+=y*w; }
+  }
+  let pw=NaN;
+  if(wsum>1e-12){
+    cx/=wsum; cy/=wsum;
+    let var2=0;
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      const w=cur[y*N+x]*cur[y*N+x];
+      if(w>0){ var2+=w*((x-cx)*(x-cx)+(y-cy)*(y-cy)); }
+    }
+    pw=Math.sqrt(var2/wsum);
+    const H=hist;
+    // Speed must use the network's OWN metric so it is directly comparable to the
+    // causal bound of 1 edge/step: 8-neighbour -> Chebyshev, 4-neighbour -> L1.
+    // Averaged over a window to smooth out periodic phase wobble.
+    H.cent.push({n:step,cx,cy});
+    if(H.cent.length>4000) H.cent.shift();
+    let vCausal=NaN;
+    const WIN=Math.min(24, H.cent.length-1);
+    if(WIN>=4){
+      const a=H.cent[H.cent.length-1], b=H.cent[H.cent.length-1-WIN];
+      const dx=Math.abs(a.cx-b.cx), dy=Math.abs(a.cy-b.cy);
+      const d = cfg.nb===8 ? Math.max(dx,dy) : (dx+dy);
+      vCausal = d/(a.n-b.n);
+    }
+    H.pv.push({n:step,cx,cy,v:vCausal});
+    if(H.pv.length>4000) H.pv.shift();
+  }
+
+  hist.n.push(step); hist.rC.push(rC); hist.rW.push(rW);
+  hist.aniso.push(aniso); hist.pw.push(pw); hist.mass.push(wsum);
+  hist.nTouched = nTouched;
+  if(hist.n.length>6000){ for(const k of ['n','rC','rW','aniso','pw','mass']) hist[k].shift(); }
+}
+
+// Least-squares slope over [40%, end] — skips the initial transient
+function slope(xs, ys, end){
+  const m = (end && end>0) ? Math.min(end+1, xs.length) : xs.length;
+  if(m<6) return NaN;
+  const s=Math.floor(m*0.4);
+  let sx=0,sy=0,sxx=0,sxy=0,c=0;
+  for(let i=s;i<m;i++){
+    const X=xs[i], Y=ys[i];
+    if(!isFinite(Y)) continue;
+    sx+=X; sy+=Y; sxx+=X*X; sxy+=X*Y; c++;
+  }
+  if(c<3) return NaN;
+  return (c*sxy-sx*sy)/(c*sxx-sx*sx);
+}
+
+// Once the front hits the boundary it saturates, so the slope may only be fitted
+// on the freely-expanding segment.
+function growthEnd(){
+  const H=hist, m=H.n.length;
+  if(m<3) return 0;
+  const limW=N*0.44, limC=N*0.85;
+  let e=0;
+  for(let i=1;i<m;i++){
+    if(H.rW[i]>=limW || H.rC[i]>=limC) break;
+    e=i;
+  }
+  return e;
+}
+
+/* ============================================================
+   4. Spacetime diagram (the light cone, experiment 2)
+   ============================================================ */
+function pushSpacetimeRow(){
+  if(stRow>=ST_H) return;
+  const img=stCtx.createImageData(N,1), d=img.data;
+  const y=srcY, inv=1/lastMax;
+  for(let x=0;x<N;x++){
+    const i=y*N+x;
+    const v=Math.max(-1,Math.min(1, cur[i]*inv));
+    const t=touched[i];
+    let r,g,b;
+    if(cfg.rule==='life'){
+      const on=cur[i]>0.5;
+      r=on?90:8; g=on?240:14; b=on?190:26;
+    } else {
+      const a=Math.abs(v)**0.45;
+      if(v>=0){ r=20+235*a; g=40+120*a; b=70+40*a; }
+      else    { r=20+30*a;  g=70+150*a; b=90+165*a; }
+    }
+    if(t && Math.abs(v)<1e-3){ r=Math.max(r,26); g=Math.max(g,32); b=Math.max(b,60); }
+    const o=x*4; d[o]=r; d[o+1]=g; d[o+2]=b; d[o+3]=255;
+  }
+  stCtx.putImageData(img,0,stRow); stRow++;
+}
+
+/* ============================================================
+   5. Rendering
+   ============================================================ */
+function drawField(){
+  const W=fieldCv.width, H=fieldCv.height;
+  fctx.setTransform(1,0,0,1,0,0);
+  fctx.fillStyle='#05080f'; fctx.fillRect(0,0,W,H);
+  if(!cur) return;
+
+  if(exp===2 && stCanvas){
+    // Experiment 2 main view = spacetime diagram. Same pixel scale on both axes -> c=1 is exactly 45°
+    const pad=26*DPR;
+    const k=Math.min((W-pad*2)/N, (H-pad*2)/ST_H);
+    const dw=N*k, dh=ST_H*k;
+    const ox=(W-dw)/2, oy=(H-dh)/2;
+    fctx.imageSmoothingEnabled=false;
+    fctx.drawImage(stCanvas, 0,0,N,ST_H, ox,oy,dw,dh);
+    fctx.strokeStyle='rgba(120,150,214,.28)'; fctx.lineWidth=1; fctx.strokeRect(ox,oy,dw,dh);
+    const cxp=ox+(srcX+0.5)*k;
+    function cone(v,color,lab,t){
+      // Cone lines clipped to the frame (anything beyond means the cone has left this lattice)
+      fctx.save();
+      fctx.beginPath(); fctx.rect(ox,oy,dw,dh); fctx.clip();
+      fctx.strokeStyle=color; fctx.lineWidth=1.6*DPR; fctx.setLineDash([6*DPR,5*DPR]);
+      fctx.beginPath();
+      fctx.moveTo(cxp,oy); fctx.lineTo(cxp+v*ST_H*k, oy+dh);
+      fctx.moveTo(cxp,oy); fctx.lineTo(cxp-v*ST_H*k, oy+dh);
+      fctx.stroke(); fctx.setLineDash([]);
+      fctx.restore();
+      // Label rides the right branch; staggered vertically so the two don't overlap
+      let lx=cxp+v*ST_H*k*t+7*DPR, ly=oy+dh*t;
+      fctx.font=`600 ${11*DPR}px "Segoe UI",system-ui`;
+      const tw=fctx.measureText(lab).width;
+      if(lx+tw>ox+dw-4*DPR) lx=cxp+v*ST_H*k*t-tw-9*DPR;
+      fctx.fillStyle=color; fctx.textAlign='left'; fctx.textBaseline='middle';
+      fctx.fillText(lab, lx, ly);
+    }
+    cone(1,'rgba(255,107,138,.95)','causal bound c=1', 0.42);
+    if(cfg.rule!=='life') cone(Math.sqrt(cfg.kappa),'rgba(95,208,255,.95)',`wave front √κ=${Math.sqrt(cfg.kappa).toFixed(2)}`, 0.82);
+    fctx.fillStyle='rgba(180,200,240,.8)'; fctx.font=`${11*DPR}px "Segoe UI",system-ui`;
+    fctx.textAlign='center'; fctx.textBaseline='bottom';
+    fctx.fillText('x  (spatial slice through the source)', ox+dw/2, oy-7*DPR);
+    fctx.save(); fctx.translate(ox-9*DPR, oy+dh/2); fctx.rotate(-Math.PI/2);
+    fctx.textAlign='center'; fctx.textBaseline='bottom';
+    fctx.fillText('n  (updates, increasing downward)', 0,0); fctx.restore();
+    return;
+  }
+
+  // Other experiments: 2D field + causal-ball boundary
+  const img=offCtx.createImageData(N,N), d=img.data;
+  const inv=1/lastMax;
+  for(let i=0;i<N*N;i++){
+    let r,g,b;
+    if(cfg.rule==='life'){
+      const on=cur[i]>0.5;
+      r=on?110:7; g=on?245:12; b=on?195:24;
+    } else {
+      const v=Math.max(-1,Math.min(1,cur[i]*inv));
+      const a=Math.abs(v)**0.45;
+      if(v>=0){ r=18+237*a; g=34+126*a; b=64+46*a; }
+      else    { r=16+34*a;  g=64*1+152*a; b=84+171*a; }
+    }
+    if(touched[i] && (cfg.rule==='life'? cur[i]<0.5 : Math.abs(cur[i]*inv)<1e-3)){
+      r=Math.max(r,24); g=Math.max(g,30); b=Math.max(b,58);
+    }
+    const o=i*4; d[o]=r; d[o+1]=g; d[o+2]=b; d[o+3]=255;
+  }
+  offCtx.putImageData(img,0,0);
+  const side=Math.min(W,H), ox=(W-side)/2, oy=(H-side)/2;
+  fctx.imageSmoothingEnabled=false;
+  fctx.drawImage(off,0,0,N,N,ox,oy,side,side);
+
+  // Theoretical causal-ball boundary (4-neighbour = L1 diamond; 8-neighbour = Chebyshev square)
+  const k=side/N, r=step;
+  if(r>0 && r<N*0.48 && !extra.length && cfg.seed==='point'){
+    fctx.strokeStyle='rgba(255,107,138,.85)'; fctx.lineWidth=1.5*DPR; fctx.setLineDash([5,4]);
+    fctx.beginPath();
+    const cxp=ox+(srcX+0.5)*k, cyp=oy+(srcY+0.5)*k, R=r*k;
+    if(cfg.nb===4){
+      fctx.moveTo(cxp,cyp-R); fctx.lineTo(cxp+R,cyp); fctx.lineTo(cxp,cyp+R); fctx.lineTo(cxp-R,cyp); fctx.closePath();
+    } else {
+      fctx.rect(cxp-R,cyp-R,2*R,2*R);
+    }
+    fctx.stroke(); fctx.setLineDash([]);
+    fctx.fillStyle='rgba(255,107,138,.95)'; fctx.font=`600 ${11*DPR}px system-ui`; fctx.textAlign='center';
+    fctx.fillText('causal ball  d_G ≤ n', cxp, cyp-R-6*DPR);
+  }
+  fctx.strokeStyle='rgba(120,150,214,.25)'; fctx.lineWidth=1; fctx.strokeRect(ox,oy,side,side);
+}
+
+/* --- generic line plot --- */
+function drawPlot(series, opts){
+  const W=plotCv.width, H=plotCv.height;
+  pctx.setTransform(1,0,0,1,0,0);
+  pctx.clearRect(0,0,W,H);
+  const M={l:56*DPR,r:14*DPR,t:14*DPR,b:38*DPR};
+  const pw=Math.max(10,W-M.l-M.r), ph=Math.max(10,H-M.t-M.b);
+  opts=opts||{};
+  let x0=opts.x0, x1=opts.x1, y0=opts.y0, y1=opts.y1;
+  if(x0===undefined){
+    x0=Infinity; x1=-Infinity; y0=Infinity; y1=-Infinity;
+    for(const s of series) for(const p of s.pts){
+      if(!isFinite(p[0])||!isFinite(p[1])) continue;
+      x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]);
+      y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]);
+    }
+    if(!isFinite(x0)){ x0=0;x1=1;y0=0;y1=1; }
+    if(opts.yFromZero) y0=0;
+    const pad=(y1-y0)*0.08||0.5; y0-=pad; y1+=pad;
+    if(x1<=x0) x1=x0+1;
+  }
+  const SX=v=>M.l+(v-x0)/(x1-x0)*pw;
+  const SY=v=>M.t+ph-(v-y0)/(y1-y0)*ph;
+
+  pctx.strokeStyle='rgba(120,150,214,.18)'; pctx.lineWidth=1;
+  pctx.strokeRect(M.l,M.t,pw,ph);
+  pctx.font=`${10.5*DPR}px system-ui`; pctx.textBaseline='middle'; pctx.textAlign='right';
+  for(let i=0;i<=4;i++){
+    const v=y0+(y1-y0)*i/4, sy=SY(v);
+    pctx.strokeStyle='rgba(120,150,214,.10)';
+    pctx.beginPath(); pctx.moveTo(M.l,sy); pctx.lineTo(M.l+pw,sy); pctx.stroke();
+    pctx.fillStyle='rgba(160,180,220,.8)';
+    pctx.fillText(fmtNum(v), M.l-6*DPR, sy);
+  }
+  pctx.textAlign='center'; pctx.textBaseline='top';
+  for(let i=0;i<=4;i++){
+    const v=x0+(x1-x0)*i/4, sx=SX(v);
+    pctx.strokeStyle='rgba(120,150,214,.10)';
+    pctx.beginPath(); pctx.moveTo(sx,M.t); pctx.lineTo(sx,M.t+ph); pctx.stroke();
+    pctx.fillStyle='rgba(160,180,220,.8)';
+    pctx.fillText(fmtNum(v), sx, M.t+ph+6*DPR);
+  }
+  pctx.fillStyle='rgba(143,163,205,.95)'; pctx.font=`600 ${11*DPR}px "Segoe UI",system-ui`;
+  if(opts.xlab){ pctx.textAlign='center'; pctx.fillText(opts.xlab, M.l+pw/2, M.t+ph+21*DPR); }
+  if(opts.ylab){ pctx.save(); pctx.translate(14*DPR, M.t+ph/2); pctx.rotate(-Math.PI/2);
+    pctx.textAlign='center'; pctx.textBaseline='middle'; pctx.fillText(opts.ylab,0,0); pctx.restore(); }
+
+  for(const s of series){
+    if(!s.pts.length) continue;
+    pctx.strokeStyle=s.color; pctx.lineWidth=(s.w||1.8)*DPR;
+    if(s.dash) pctx.setLineDash(s.dash.map(v=>v*DPR)); else pctx.setLineDash([]);
+    pctx.beginPath(); let started=false;
+    for(const p of s.pts){
+      if(!isFinite(p[0])||!isFinite(p[1])){ started=false; continue; }
+      const sx=SX(p[0]), sy=SY(p[1]);
+      started?pctx.lineTo(sx,sy):(pctx.moveTo(sx,sy),started=true);
+    }
+    pctx.stroke(); pctx.setLineDash([]);
+    if(s.dots) for(const p of s.pts){
+      if(!isFinite(p[1])) continue;
+      pctx.fillStyle=s.color; pctx.beginPath(); pctx.arc(SX(p[0]),SY(p[1]),2.2*DPR,0,6.2832); pctx.fill();
+    }
+  }
+  // legend
+  let ly=M.t+8*DPR;
+  pctx.font=`${10.5*DPR}px system-ui`; pctx.textAlign='left'; pctx.textBaseline='middle';
+  for(const s of series){
+    if(!s.name) continue;
+    pctx.strokeStyle=s.color; pctx.lineWidth=2.4*DPR;
+    if(s.dash) pctx.setLineDash(s.dash.map(v=>v*DPR)); else pctx.setLineDash([]);
+    pctx.beginPath(); pctx.moveTo(M.l+pw-150*DPR,ly); pctx.lineTo(M.l+pw-128*DPR,ly); pctx.stroke(); pctx.setLineDash([]);
+    pctx.fillStyle='rgba(220,232,255,.9)'; pctx.fillText(s.name, M.l+pw-122*DPR, ly);
+    ly+=15*DPR;
+  }
+}
+function fmtNum(v){
+  const a=Math.abs(v);
+  if(a>=1e5) return v.toExponential(1);
+  if(a>=100) return v.toFixed(0);
+  if(a>=10) return v.toFixed(1);
+  if(a>=1) return v.toFixed(2);
+  return v.toFixed(3);
+}
+
+function drawAll(){ drawField(); drawPlotForExp(); }
+
+function drawPlotForExp(){
+  const H=hist; if(!H) return;
+  if(exp===1){
+    $('plotTitle').textContent='Front radius r(n)';
+    $('plotSub').textContent='causal support vs amplitude front';
+    const pC=[], pW=[], pT=[], pS=[];
+    for(let i=0;i<H.n.length;i++){
+      pC.push([H.n[i],H.rC[i]]); pW.push([H.n[i],H.rW[i]]);
+      pT.push([H.n[i],H.n[i]]);  pS.push([H.n[i],Math.sqrt(cfg.kappa)*H.n[i]]);
+    }
+    drawPlot([
+      {pts:pT,color:'rgba(255,107,138,.45)',dash:[5,4],name:'analytic c=1·n'},
+      {pts:pS,color:'rgba(95,208,255,.45)',dash:[5,4],name:'analytic √κ·n'},
+      {pts:pC,color:'#ff6b8a',name:'causal front r_C'},
+      {pts:pW,color:'#5fd0ff',name:'amplitude front r_W'}
+    ],{xlab:'updates n',ylab:'radius (edges / cells)',yFromZero:true});
+  } else if(exp===2){
+    $('plotTitle').textContent='|B(n)| growth and effective dimension';
+    $('plotSub').textContent='log|B| vs log n';
+    const pts=[], fit=[];
+    if(ballCount){
+      for(let d=1;d<ballCount.length;d++){
+        if(ballCount[d]<=1) continue;
+        pts.push([Math.log(d),Math.log(ballCount[d])]);
+      }
+      if(isFinite(dEff) && pts.length){
+        const x0=pts[0][0], y0=pts[0][1];
+        for(const p of pts) fit.push([p[0], y0+dEff*(p[0]-x0)]);
+      }
+    }
+    drawPlot([
+      {pts:fit,color:'rgba(255,180,84,.6)',dash:[5,4],name:`fitted slope d=${isFinite(dEff)?dEff.toFixed(2):'—'}`},
+      {pts,color:'#b98cff',name:'log |B(n)|',dots:true}
+    ],{xlab:'log n',ylab:'log |B(n)|'});
+  } else if(exp===3){
+    $('plotTitle').textContent='Stability of the localised excitation';
+    $('plotSub').textContent='width (does it disperse?) and centroid speed';
+    const pw=[], pv=[];
+    for(let i=0;i<H.n.length;i++) if(isFinite(H.pw[i])) pw.push([H.n[i],H.pw[i]]);
+    for(const p of H.pv) if(isFinite(p.v)) pv.push([p.n,p.v]);
+    drawPlot([
+      {pts:pw,color:'#4be3a6',name:'rms width'},
+      {pts:pv,color:'#ffb454',name:'centroid speed |v|'}
+    ],{xlab:'updates n',ylab:'cells / step',yFromZero:true});
+  } else {
+    if(dispData){
+      $('plotTitle').textContent='Dispersion relation ω(k)';
+      $('plotSub').textContent='measured vs continuum limit';
+      const meas=[], cont=[], latt=[];
+      for(const d of dispData){
+        meas.push([d.k,d.wMeas]); cont.push([d.k,d.wCont]); latt.push([d.k,d.wExact]);
+      }
+      drawPlot([
+        {pts:cont,color:'rgba(255,107,138,.75)',dash:[6,4],name:'continuum √κ·k'},
+        {pts:latt,color:'rgba(255,180,84,.6)',dash:[3,3],name:'lattice analytic'},
+        {pts:meas,color:'#5fd0ff',name:'measured ω',dots:true}
+      ],{xlab:'wavenumber k',ylab:'frequency ω',yFromZero:true});
+    } else {
+      $('plotTitle').textContent='Anisotropy A(n)';
+      $('plotSub').textContent='smaller = closer to a continuum, isotropic space';
+      const pa=[];
+      for(let i=0;i<H.n.length;i++) if(isFinite(H.aniso[i])) pa.push([H.n[i],H.aniso[i]]);
+      const ref=[]; if(H.n.length) { ref.push([H.n[0],0.343]); ref.push([H.n[H.n.length-1],0.343]); }
+      drawPlot([
+        {pts:ref,color:'rgba(255,107,138,.5)',dash:[5,4],name:'diamond causal ball 0.343'},
+        {pts:pa,color:'#4be3a6',name:'wave-front anisotropy'}
+      ],{xlab:'updates n',ylab:'(r_max−r_min)/r_mean',yFromZero:true});
+    }
+  }
+}
+
+/* ============================================================
+   6. Dispersion measurement (1-D chain, independent of the main sim)
+   ============================================================ */
+function measureDispersion(){
+  const L=512, K=cfg.kappa, m2=cfg.mass*cfg.mass, STEPS=900;
+  const out=[];
+  for(let mi=1;mi<=24;mi++){
+    const k=Math.PI*mi/24;
+    let p=new Float64Array(L), c=new Float64Array(L), nx=new Float64Array(L);
+    for(let x=0;x<L;x++){ const v=Math.cos(k*x); c[x]=v; p[x]=v; }
+    // Count zero crossings at x=0 to get the half period
+    let crossings=0, firstCross=-1, lastCross=-1, sPrev=Math.sign(c[0]);
+    for(let n=1;n<=STEPS;n++){
+      for(let x=0;x<L;x++){
+        const xm=(x-1+L)%L, xp=(x+1)%L;
+        let v=2*c[x]-p[x]+K*(c[xm]+c[xp]-2*c[x]);
+        if(m2) v-=m2*c[x];
+        nx[x]=v;
+      }
+      const t=p; p=c; c=nx; nx=t;
+      const s=Math.sign(c[0]);
+      if(s!==0 && sPrev!==0 && s!==sPrev){
+        crossings++;
+        if(firstCross<0) firstCross=n; lastCross=n;
+      }
+      if(s!==0) sPrev=s;
+    }
+    let wMeas=NaN;
+    if(crossings>=2 && lastCross>firstCross){
+      const halfPeriod=(lastCross-firstCross)/(crossings-1);
+      wMeas=Math.PI/halfPeriod;
+    }
+    const sk=Math.sqrt(K)*Math.sin(k/2);
+    const wExact = sk<=1 ? 2*Math.asin(Math.min(1,sk)) : NaN;   // massless analytic solution
+    out.push({k, wMeas, wCont:Math.sqrt(K)*k, wExact: m2?NaN:wExact});
+  }
+  dispData=out;
+  drawPlotForExp(); updateReadout();
+}
+
+/* ============================================================
+   7. Readout
+   ============================================================ */
+/*  Design rules:
+ *  1) Every number is tagged with its provenance.
+ *     ANALYTIC = computable without running anything; measuring it only checks the code.
+ *     MEASURED = no closed form exists; the number itself is the result.
+ *  2) Colour is never used to mean "right/wrong". Painting a threshold green means
+ *     assuming the answer first and then checking for it — confirmation bias in code.
+ *  3) No conclusions are stated. Instead: "cases you might see -> what each would mean",
+ *     and you decide by looking at the plots.
+ */
+function met(label, value, kind, sub, cmp){
+  const tag = kind ? `<span class="src ${kind}">${kind==='ana'?'ANALYTIC':'MEASURED'}</span>` : '';
+  return `<div class="met"><b>${value}</b>${label}${tag}`+
+         (sub?`<s>${sub}</s>`:'') + (cmp?`<i>${cmp}</i>`:'') + `</div>`;
+}
+function devTxt(meas, pred, digits){
+  if(!isFinite(meas)||!isFinite(pred)||pred===0) return '';
+  const d=(meas/pred-1)*100;
+  return `reference ${pred.toFixed(digits||3)} · diff ${d>=0?'+':''}${d.toFixed(1)}%`;
+}
+const F=(v,d)=>isFinite(v)?v.toFixed(d===undefined?3:d):'—';
+
+// Per experiment: what you might see -> what it would mean.
+// a = substantive result   b = expected, but tautological
+// c = bug / numerical problem   d = trap, easy to misread
+const CASES={
+1:[
+ ['b','Red line (causal front) dead straight, slope pinned at 1.000 — this <b>is the rule itself</b> (at most one edge per step). Reproducing it only shows the code is correct; it is <b>not a discovery</b>.'],
+ ['a','Blue line (wave front) clearly <b>below</b> the red one — this part is substantive: <b>"how far information can reach" and "how fast the signal actually travels" are two different things</b>. Compare light in vacuum vs light in glass.'],
+ ['d','Blue line slightly above √κ (e.g. 0.54 vs 0.50) — expected. The threshold criterion picks up the exponentially small precursor ahead of the front, so it lands between √κ and 1.'],
+ ['c','Blue slope <b>exceeds</b> the red one (>1) — physically impossible; it is a bug, or κ&gt;0.5 numerical blow-up.'],
+ ['d','Both lines <b>flatten together</b> — the front hit the boundary and saturated; slopes past that point are meaningless. Check the fit window cut-off.'],
+ ['c','Picture turns into snow / values explode — κ exceeded the stability limit 0.5. Numerical artefact, not physics.'],
+ ['a','Push "long-range edges" to a few dozen and the red line <b>stops being straight and shoots to the top</b> — break locality and the light cone is gone. This is the most direct evidence that the cone comes from "neighbours only", and it is more convincing than measuring c=1.'],
+],
+2:[
+ ['a','A clear <b>V opening downward</b>, bright region hugging the blue dashes with the red dashes further out — the light cone has formed. The dim band between red and blue is the precursor.'],
+ ['b','Red dashes sit at exactly 45° — that is a consequence of drawing both axes at the same scale. A plotting convention, <b>not a measurement</b>.'],
+ ['d','<b>Stripes or a chequerboard</b> inside the V — different wavelengths travelling at different speeds (lattice dispersion). A visible fingerprint of discreteness, not a bug.'],
+ ['b','Right plot: log|B| vs log n is a <b>straight line with slope ≈2</b> — space "looks" two-dimensional. But two dimensions were built in by hand; this only validates the measurement method.'],
+ ['d','Right plot <b>bends down</b> at the end — the causal ball filled the finite lattice. Use the straight mid-section only and discard the tail.'],
+ ['a','With long-range edges the right plot has <b>no straight segment</b> and slope far above 2 — the very notion of "spatial dimension" fails. That is more informative than getting d=2.'],
+],
+3:[
+ ['a','Width curve <b>flat over the long run</b> (growth ≈0) + Σφ² constant + centroid moving uniformly — a structure that keeps its own shape while translating. That qualifies as a "particle".'],
+ ['b','Width <b>wobbles periodically but does not trend upward</b> — also stable. A Game-of-Life glider has a 4-step phase cycle; the wobble is its own rhythm.'],
+ ['d','Width <b>rises steadily</b> (linear or square-root) — it is spreading out, not a particle. <b>Linear rules almost always do this</b>; it is the expected outcome, not a failure.'],
+ ['a','Width <b>shrinks and then blows up</b> — nonlinear collapse. 2-D sine-Gordon may well end this way; <u>I do not have a settled answer here, judge it from the curve yourself</u>.'],
+ ['c','Centroid speed ≥ 1 — that crosses the causal bound, so it is a bug or a metric mismatch (Euclidean distance cannot be compared against an edges-per-step bound).'],
+ ['d','Σφ² <b>drifting slowly</b> — integration error accumulating; long runs stop being trustworthy.'],
+],
+4:[
+ ['b','Small-k points <b>sitting on the red dashes</b> (near straight) — at long wavelength it really does become the continuum wave equation. The red line is analytic, not a fit.'],
+ ['a','Large-k points <b>falling clearly below the red line</b>, bending toward the orange — discreteness exposed. <b>Continuum spacetime is only a long-wavelength approximation</b>, and this is the cleanest result in the whole sandbox.'],
+ ['b','Points essentially on the orange curve (lattice analytic) — the measurement method is accurate. The orange curve was computed, not measured.'],
+ ['d','Points <b>jittering</b> about the orange curve — integer quantisation error from the zero-crossing method, not new physics.'],
+ ['a','Anisotropy <b>falls</b> as the seed width σ grows — isotropy emerges at long wavelength; the underlying lattice is not isotropic at all.'],
+ ['d','Anisotropy <b>stuck at 34%</b> — you are looking at the causal ball, not the wave front. On a 4-neighbour lattice the causal ball is always a diamond and never rounds off at any scale. <b>This is the residual preferred frame, and it has not gone away.</b>'],
+ ['c','Anisotropy identically 0 or permanently blank — the front has not formed yet, or the seed is too small to cover enough angles.'],
+],
+};
+function renderCases(){
+  const items=CASES[exp]||[];
+  $('cases').innerHTML =
+    `<div class="chd"><h4>Cases you might see — judge for yourself from the two plots</h4>`+
+    `<div class="lg">`+
+      `<span><i style="background:var(--ok)"></i>substantive</span>`+
+      `<span><i style="background:var(--accent)"></i>expected, but tautological</span>`+
+      `<span><i style="background:#7f8fb0"></i>trap / easy to misread</span>`+
+      `<span><i style="background:var(--bad)"></i>bug or numerical issue</span>`+
+    `</div></div>`+
+    `<ul>${items.map(([c,t])=>`<li class="${c}">${t}</li>`).join('')}</ul>`;
+}
+function updateReadout(){
+  const H=hist; if(!H) return;
+  const ge=growthEnd();
+  const cC=slope(H.n,H.rC,ge), cW=slope(H.n,H.rW,ge);
+  const sk=Math.sqrt(cfg.kappa);
+  const aniso=H.aniso.length?H.aniso[H.aniso.length-1]:NaN;
+  const M=$('metrics'), V=$('verdict');
+  let html='', v='';
+  const win = ge>0 ? `Fit window <code>n ≤ ${H.n[ge]}</code> (free expansion, before the front hits the boundary)`
+                   : `Fit window: not enough samples yet`;
+
+  if(exp===1){
+    html += met('Causal speed c<sub>caus</sub>', F(cC), 'ana', 'edges/step', 'the rule defines it as 1.000; measuring only checks for bugs');
+    html += met('Wave-front speed c<sub>wave</sub>', F(cW), 'obs', 'cells/step', devTxt(cW, sk));
+    html += met('Causal ball |B(n)|', H.nTouched?H.nTouched.toLocaleString('en-US'):'0', 'ana', 'nodes reached so far', 'L1 ball = 2n²+2n+1');
+    html += met('Long-range edges', extra.length, null, 'a setting · breaks locality');
+    html += met('κ stability limit', '0.50', 'ana', `current κ=${cfg.kappa.toFixed(2)}`,
+                cfg.kappa>0.5?'exceeded — results untrustworthy':'inside the stable range');
+    v = `${win}. Measured now: c<sub>caus</sub>=<b>${F(cC)}</b>, c<sub>wave</sub>=<b>${F(cW)}</b>; `+
+        `analytic references 1.000 and √κ=<b>${sk.toFixed(3)}</b>. Long-range edges: <b>${extra.length}</b>.`;
+  } else if(exp===2){
+    html += met('Light-cone slope', F(cC), 'ana', 'causal boundary dx/dn', 'as above, 1.000 is a definition');
+    html += met('Wave-front slope', F(cW), 'obs', 'edge of the bright region', devTxt(cW, sk));
+    html += met('Effective dimension', F(dEff), 'ana', '|B(n)| ~ n^d fit', '2-D lattice → reference 2.000');
+    html += met('Spacetime rows', `${Math.min(stRow,ST_H)} / ${ST_H}`, null, 'updates recorded');
+    html += met('Fit window', ge>0?`n ≤ ${H.n[ge]}`:'—', null, 'front saturates beyond this');
+    v = `${win}. Left: horizontal axis is a spatial slice through the source, vertical axis is update count `+
+        `increasing downward; <b>both axes share one pixel scale</b>, so c=1 is exactly 45°. `+
+        `Measured now: cone slope=<b>${F(cC)}</b>, wave-front slope=<b>${F(cW)}</b>, effective dimension=<b>${F(dEff)}</b>.`;
+  } else if(exp===3){
+    const pw=H.pw.length?H.pw[H.pw.length-1]:NaN;
+    const growth=slope(H.n,H.pw,0);
+    const vs=H.pv.slice(-40).map(p=>p.v).filter(isFinite);
+    const vAvg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:NaN;
+    const isLife=cfg.rule==='life';
+    const kindV = isLife?'ana':'obs';
+    html += met('Excitation width', F(pw,2), 'obs', 'rms radius (cells)');
+    html += met('Width growth rate', F(growth,4), 'obs', '0 = no spreading, positive = dispersing', 'no closed form — read the trend');
+    html += met('Centroid speed |v|', F(vAvg), kindV, (cfg.nb===8?'Chebyshev':'L1')+' edges/step',
+                isLife?'glider moves 1 cell per 4 steps → reference 0.250':'nonlinear structure, no analytic value');
+    html += met('Causal bound', '1.000', 'ana', 'v must stay below it');
+    html += met('Total Σφ²', H.mass.length?H.mass[H.mass.length-1].toExponential(2):'—', 'obs', 'conservation check');
+    v = `Measured now: width=<b>${F(pw,2)}</b>, growth rate=<b>${F(growth,4)}</b>, centroid speed=<b>${F(vAvg)}</b> (bound 1.000), `+
+        `Σφ²=<b>${H.mass.length?H.mass[H.mass.length-1].toExponential(2):'—'}</b>. `+
+        (isLife?`The glider's 0.250 is a known constant; this only verifies the metric is applied correctly.`
+               :`<b>Whether a nonlinear structure stays stable has no analytic answer — judge it from the width curve.</b>`);
+  } else {
+    html += met('Wave-front anisotropy', isFinite(aniso)?(aniso*100).toFixed(1)+'%':'—', 'obs',
+                '(r_max−r_min)/r_mean', `current seed width σ=${cfg.width.toFixed(1)}`);
+    html += met('Causal-ball anisotropy', '34.3%', 'ana', '4-neighbour L1 diamond', 'scale-independent, constant');
+    html += met('Effective dimension', F(dEff), 'ana', 'reference 2.000');
+    if(dispData){
+      const small=dispData.slice(0,4).filter(d=>isFinite(d.wMeas));
+      let cFit=NaN;
+      if(small.length){
+        let sxy=0,sxx=0;
+        for(const d of small){ sxy+=d.k*d.wMeas; sxx+=d.k*d.k; }
+        cFit=sxy/sxx;
+      }
+      const big=dispData[dispData.length-1];
+      const dv=big&&isFinite(big.wMeas)&&big.wCont>0 ? (1-big.wMeas/big.wCont)*100 : NaN;
+      html += met('Small-k measured ω/k', isFinite(cFit)?cFit.toFixed(4):'—', 'obs', 'linear fit at long wavelength', devTxt(cFit, sk, 4));
+      html += met('Deviation at k=π', isFinite(dv)?dv.toFixed(1)+'%':'—', 'ana', 'how far discreteness shows',
+                  `κ=${cfg.kappa.toFixed(2)} → 1−(2/π)·asin√κ`);
+      v = `Dispersion done. Measured now: small-k ω/k=<b>${isFinite(cFit)?cFit.toFixed(4):'—'}</b> `+
+          `(analytic reference √κ=${sk.toFixed(4)}); at k=π the deviation from the continuum limit is `+
+          `<b>${isFinite(dv)?dv.toFixed(1):'—'}%</b>; wave-front anisotropy <b>${isFinite(aniso)?(aniso*100).toFixed(1)+'%':'—'}</b>. `+
+          `On the plot: red = continuum limit, orange = lattice analytic, blue dots = measured.`;
+    } else {
+      v = `Measured now: wave-front anisotropy <b>${isFinite(aniso)?(aniso*100).toFixed(1)+'%':'—'}</b> `+
+          `(seed width σ=${cfg.width.toFixed(1)}), effective dimension <b>${F(dEff)}</b>. `+
+          `For the quantitative continuum test, click "Measure full ω(k) spectrum" on the left. `+
+          `Try sweeping σ from small to large and watch what the anisotropy does.`;
+    }
+  }
+  M.innerHTML=html; V.innerHTML=v; renderCases();
+}
+
+/* ============================================================
+   8. Experiment switching and UI
+   ============================================================ */
+const PRESET={
+  1:{rule:'wave', seed:'point', width:1,   kappa:0.25, mass:0, nb:4, bnd:'fixed', rewire:0, speed:2, N:128},
+  2:{rule:'wave', seed:'point', width:1,   kappa:0.25, mass:0, nb:4, bnd:'fixed', rewire:0, speed:1, N:128},
+  3:{rule:'life', seed:'glider',width:3,   kappa:0.25, mass:0, nb:8, bnd:'torus', rewire:0, speed:2, N:64},
+  4:{rule:'wave', seed:'gauss', width:6,   kappa:0.25, mass:0, nb:4, bnd:'fixed', rewire:0, speed:2, N:128}
+};
+function setExp(e){
+  exp=e; dispData=null;
+  for(const t of document.querySelectorAll('.tab')) t.classList.toggle('on', +t.dataset.exp===e);
+  const p=PRESET[e];
+  Object.assign(cfg,p);
+  syncUI();
+  $('grpDisp').style.display = e===4?'':'none';
+  $('fieldTitle').textContent = e===2?'Spacetime diagram (light cone)':'Field φ and causal ball';
+  $('fieldSub').textContent   = e===2?'downward = update count':'red dashes = causal-ball boundary';
+  reset();
+}
+function syncUI(){
+  $('pN').value=cfg.N; $('pNb').value=cfg.nb; $('pBnd').value=cfg.bnd;
+  $('pRw').value=cfg.rewire; $('vRw').textContent=cfg.rewire;
+  $('pRule').value=cfg.rule;
+  $('pK').value=cfg.kappa; $('vK').textContent=(+cfg.kappa).toFixed(2);
+  $('pM').value=cfg.mass;  $('vM').textContent=(+cfg.mass).toFixed(2);
+  $('pSeed').value=cfg.seed;
+  $('pW').value=cfg.width; $('vW').textContent=(+cfg.width).toFixed(1);
+  $('pSpd').value=cfg.speed; $('vSpd').textContent=cfg.speed;
+}
+function updateRunBtn(){
+  const b=$('btnRun');
+  b.textContent = running?'⏸ Pause':'▶ Run';
+  b.className = 'btn '+(running?'pause':'go');
+}
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setExp(+t.dataset.exp)));
+$('btnRun').addEventListener('click', ()=>{ running=!running; updateRunBtn(); });
+$('btnStep').addEventListener('click', ()=>{ running=false; updateRunBtn(); doStep(); drawAll(); updateReadout(); });
+$('btnReset').addEventListener('click', reset);
+$('btnDisp').addEventListener('click', measureDispersion);
+
+$('pN').addEventListener('change', e=>{ cfg.N=+e.target.value; reset(); });
+$('pNb').addEventListener('change', e=>{ cfg.nb=+e.target.value; reset(); });
+$('pBnd').addEventListener('change', e=>{ cfg.bnd=e.target.value; reset(); });
+$('pRule').addEventListener('change', e=>{
+  cfg.rule=e.target.value;
+  if(cfg.rule==='life'){ cfg.nb=8; if(cfg.seed!=='glider'&&cfg.seed!=='noise') cfg.seed='glider'; }
+  if(cfg.rule==='sg' && cfg.mass===0) cfg.mass=0.3;
+  syncUI(); reset();
+});
+$('pSeed').addEventListener('change', e=>{
+  cfg.seed=e.target.value;
+  if(cfg.seed==='breather'&&cfg.rule!=='sg'){ cfg.rule='sg'; if(cfg.mass===0) cfg.mass=0.3; }
+  if(cfg.seed==='glider'&&cfg.rule!=='life'){ cfg.rule='life'; cfg.nb=8; }
+  syncUI(); reset();
+});
+$('pRw').addEventListener('input', e=>{ cfg.rewire=+e.target.value; $('vRw').textContent=cfg.rewire; });
+$('pRw').addEventListener('change', reset);
+$('pK').addEventListener('input', e=>{ cfg.kappa=+e.target.value; $('vK').textContent=cfg.kappa.toFixed(2); drawAll(); updateReadout(); });
+$('pK').addEventListener('change', reset);
+$('pM').addEventListener('input', e=>{ cfg.mass=+e.target.value; $('vM').textContent=cfg.mass.toFixed(2); });
+$('pM').addEventListener('change', reset);
+$('pW').addEventListener('input', e=>{ cfg.width=+e.target.value; $('vW').textContent=cfg.width.toFixed(1); });
+$('pW').addEventListener('change', reset);
+$('pSpd').addEventListener('input', e=>{ cfg.speed=+e.target.value; $('vSpd').textContent=cfg.speed; });
+
+window.addEventListener('keydown', e=>{
+  const tag=(e.target&&e.target.tagName)||'';
+  if(tag==='INPUT'||tag==='SELECT') return;
+  if(e.code==='Space'){ running=!running; updateRunBtn(); e.preventDefault(); }
+  else if(e.key==='s'||e.key==='S'){ running=false; updateRunBtn(); doStep(); drawAll(); updateReadout(); }
+  else if(e.key==='r'||e.key==='R'){ reset(); }
+});
+
+/* ============================================================
+   9. Main loop
+   ============================================================ */
+function frame(){
+  if(running){
+    const lim = (exp===2) ? Math.min(cfg.speed, Math.max(0, ST_H-stRow)) : cfg.speed;
+    for(let k=0;k<lim;k++) doStep();
+    if(exp===2 && stRow>=ST_H){ running=false; updateRunBtn(); }
+    $('stepN').textContent=step;
+    drawAll(); updateReadout();
+  }
+  requestAnimationFrame(frame);
+}
+
+setExp(1);
+resizeCanvases();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
